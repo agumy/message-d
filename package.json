@@ -1,11 +1,17 @@
 {
   "name": "message-d",
   "version": "1.0.0",
-  "main": "index.js",
+  "main": "lib/index.js",
   "repository": "https://github.com/agumy/message-d.git",
   "author": "agumy <nov13sh@gmail.com>",
   "license": "MIT",
+  "scripts": {
+    "start": "tsc --watch",
+    "build": "tsc",
+    "typecheck": "tsc --noEmit"
+  },
   "devDependencies": {
+    "@types/chrome": "^0.0.133",
     "typescript": "^4.2.3"
   }
 }
