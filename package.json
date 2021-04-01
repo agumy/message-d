@@ -1,0 +1,11 @@
+{
+  "name": "message-d",
+  "version": "1.0.0",
+  "main": "index.js",
+  "repository": "https://github.com/agumy/message-d.git",
+  "author": "agumy <nov13sh@gmail.com>",
+  "license": "MIT",
+  "devDependencies": {
+    "typescript": "^4.2.3"
+  }
+}
