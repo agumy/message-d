@@ -12,7 +12,7 @@ export const observe = () => {
 
   observer.observe(translatedTextArea, {
     attributes: false,
-    childList: false,
+    childList: true,
     subtree: false,
   });
 };
