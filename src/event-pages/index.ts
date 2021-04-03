@@ -24,7 +24,7 @@ chrome.runtime.onMessage.addListener((message: RequestMessage) => {
   }
 
   chrome.tabs.query(
-    { currentWindow: true, url: "https://www.deepl.com/*" },
+    { currentWindow: true, url: "https://www.deepl.com/translator*" },
     (tab) => {
       let deepL: chrome.tabs.Tab | null = null;
 
