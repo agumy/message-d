@@ -1,107 +1,107 @@
-type ResponseMessage = {
-  key: "completedTranslation";
-  value: string;
+import { sha256 } from "../core/sha256";
+import { unescapeHTML } from "../core/unescapeHTML";
+import { Complete, Request } from "../core/Messages";
+
+type Translation = {
   translationKey: string;
+  dom: Element;
 };
 
-// @ts-ignore
-const sha256 = async (text: string) => {
-  const uint8 = new TextEncoder().encode(text);
-  const digest = await crypto.subtle.digest("SHA-256", uint8);
-  return Array.from(new Uint8Array(digest))
-    .map((v) => v.toString(16).padStart(2, "0"))
-    .join("");
+let watingTranslation: Translation[] = [];
+
+const createLoadingElement = (): HTMLDivElement => {
+  const loading = document.createElement("div");
+  loading.classList.add("message-d__loader");
+  loading.id = "message-d__loader-id";
+
+  return loading;
 };
 
-const unescapeHtml = (target: string) => {
-  const patterns: Record<string, string> = {
-    "&lt;": "<",
-    "&gt;": ">",
-    "&amp;": "&",
-    "&quot;": '"',
-    "&#x27;": "'",
-    "&#x60;": "`",
-  };
-
-  return target.replace(/&(lt|gt|amp|quot|#x27|#x60);/g, (match) => {
-    return patterns[match] ?? "";
-  });
-};
-
-let watingTranslation: { key: string; dom: Element }[] = [];
-
-const translation = async (event: KeyboardEvent) => {
+const selectTranslationTarget = async (event: KeyboardEvent): Promise<void> => {
   if (event.key !== "c" || !event.ctrlKey) {
     return;
   }
 
-  let elm: null | Element = null;
-  document.addEventListener("mousemove", (e) => {
+  let target: null | Element = null;
+  const mousemove = (e: MouseEvent): void => {
     let x = e.clientX;
     let y = e.clientY;
-    if (elm != document.elementFromPoint(x, y)) {
-      try {
-        elm?.classList.remove("message-d__translator");
-      } catch {}
+    const newTarget = document.elementFromPoint(x, y);
+    if (!target?.isEqualNode(newTarget)) {
+      target?.classList.remove("message-d__translator");
+      newTarget?.classList.add("message-d__translator");
+      target = newTarget;
     }
-    try {
-      elm = document.elementFromPoint(x, y);
-      elm?.classList.add("message-d__translator");
-    } catch {}
-  });
+  };
 
-  document.addEventListener("click", async (e) => {
+  const click = async (e: MouseEvent): Promise<void> => {
     e.preventDefault();
-    let x = e.clientX;
-    let y = e.clientY;
-    elm = document.elementFromPoint(x, y);
-    if (!elm) {
+
+    const currentTarget = document.elementFromPoint(e.clientX, e.clientY);
+
+    if (!currentTarget) {
       return;
     }
-    elm.classList.remove("message-d__translator");
 
-    const loading = document.createElement("div");
-    loading.classList.add("message-d__loader");
-    loading.id = "message-d__loader-id";
+    target?.classList.remove("message-d__translator");
+
+    const loading = createLoadingElement();
     document.body.appendChild(loading);
 
-    const key = await sha256(elm.innerHTML);
+    const translationTarget = currentTarget.innerHTML;
+    const key = await sha256(translationTarget);
     watingTranslation.push({
-      key,
-      dom: elm,
+      translationKey: key,
+      dom: currentTarget,
     });
 
     chrome.runtime.sendMessage({
       key: "requestTranslation",
-      value: elm.innerHTML,
+      value: translationTarget,
       translationKey: key,
-    });
-  });
+    } as Request);
+  };
+
+  const cancel = (event: KeyboardEvent): void => {
+    if (event.key === "Escape") {
+      document.removeEventListener("mousemove", mousemove);
+      document.removeEventListener("click", click);
+      document.removeEventListener("keydown", cancel);
+
+      const targets = document.querySelectorAll(".message-d__translator");
+      targets.forEach((t) => {
+        t.classList.remove("message-d__translator");
+      });
+    }
+  };
+
+  document.addEventListener("mousemove", mousemove);
+  document.addEventListener("click", click);
+  document.addEventListener("keydown", cancel);
 };
 
-chrome.runtime.onMessage.addListener((message: ResponseMessage) => {
+(function initialize() {
+  document.addEventListener("keydown", selectTranslationTarget);
+
+  console.info(`[message-d] completed loading scripts`);
+})();
+
+// listener for message from event page
+chrome.runtime.onMessage.addListener((message: Complete) => {
   if (message.key !== "completedTranslation") {
     return;
   }
 
   const target = watingTranslation.find(
-    (t) => t.key === message.translationKey
+    (t) => t.translationKey === message.translationKey
   );
 
-  if (!target) {
-    return;
+  if (target && message.value.trim()) {
+    target.dom.innerHTML = `${unescapeHTML(message.value)}`;
   }
 
-  if (!message.value.trim()) {
-    document.body.removeChild(document.getElementById("message-d__loader-id")!);
-    watingTranslation = watingTranslation.filter((e) => e.key !== target.key);
-    return;
-  }
-
-  target.dom.innerHTML = `${unescapeHtml(message.value)}`;
-  watingTranslation = watingTranslation.filter((e) => e.key !== target.key);
+  watingTranslation = watingTranslation.filter(
+    (e) => e.translationKey !== target?.translationKey
+  );
   document.body.removeChild(document.getElementById("message-d__loader-id")!);
 });
-
-document.addEventListener("keydown", translation);
-console.info(`message-d: loaded content scripts`);
