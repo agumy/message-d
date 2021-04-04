@@ -1,0 +1,32 @@
+{
+    "name": "Message D",
+    "version": "1.0.0",
+    "manifest_version": 2,
+    "description": "ブラウザ上で選択した文字列をDeepLで翻訳して表示します。",
+    "permissions": [
+        "tabs",
+        "activeTab",
+        "contextMenus",
+        "https://*/"
+    ],
+    "content_scripts": [
+        {
+            "matches": [
+                "http://*/*",
+                "https://*/*"
+            ],
+            "js": [
+                "./content-scripts/index.js"
+            ],
+            "css": [
+                "./content-scripts/index.css"
+            ]
+        }
+    ],
+    "background": {
+        "scripts": [
+            "./event-pages/index.js"
+        ],
+        "persistent": true
+    }
+}
