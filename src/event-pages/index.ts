@@ -1,6 +1,6 @@
 import { Tabs, browser } from "webextension-polyfill-ts";
-import { sha256 } from "../core/sha256";
-import { Complete, Request } from "../core/Messages";
+import { sha256 } from "../utils/sha256";
+import { Complete, Request } from "../Messages";
 
 browser.runtime.onMessage.addListener(async (message: Request) => {
   if (message.key !== "requestTranslation") {
@@ -82,7 +82,7 @@ browser.runtime.onMessage.addListener(async (message: Request) => {
       observer.observe(translatedTextArea, {
         attributes: false,
         childList: true,
-        characterdata: true,
+        characterData: true,
         subtree: false,
       });
       

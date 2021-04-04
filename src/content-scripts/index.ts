@@ -1,6 +1,6 @@
-import { sha256 } from "../core/sha256";
-import { unescapeHTML } from "../core/unescapeHTML";
-import { Complete, Request } from "../core/Messages";
+import { sha256 } from "../utils/sha256";
+import { unescapeHTML } from "../utils/unescapeHTML";
+import { Complete, Request } from "../Messages";
 import { browser } from "webextension-polyfill-ts";
 
 type Translation = {
