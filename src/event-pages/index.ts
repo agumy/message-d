@@ -2,7 +2,7 @@ import { Tabs, browser } from "webextension-polyfill-ts";
 import { sha256 } from "../core/sha256";
 import { Complete, Request } from "../core/Messages";
 
-chrome.runtime.onMessage.addListener(async (message: Request) => {
+browser.runtime.onMessage.addListener(async (message: Request) => {
   if (message.key !== "requestTranslation") {
     return;
   }
@@ -58,7 +58,7 @@ chrome.runtime.onMessage.addListener(async (message: Request) => {
       translationKey: message.translationKey,
       tabId: String(tab.id),
     } as Complete;
-    chrome.tabs.sendMessage(Number(tab.id), m);
+    browser.tabs.sendMessage(Number(tab.id), m);
     return;
   }
 
@@ -68,8 +68,7 @@ chrome.runtime.onMessage.addListener(async (message: Request) => {
       const observer = new MutationObserver((mutations, instance) => {
         for (const mutation of mutations) {
           const text = mutation.target.innerHTML
-          console.log(text)
-          const a = chrome.runtime.sendMessage("dmiahonigdkjdnfmndheoblcagpmnlgg", 
+          chrome.runtime.sendMessage("dmiahonigdkjdnfmndheoblcagpmnlgg", 
           { key: "completedTranslation",value: text, translationKey: "${message.translationKey}", tabId: "${tab.id}" })
           instance.disconnect();
         }
@@ -98,7 +97,7 @@ chrome.runtime.onMessage.addListener(async (message: Request) => {
   });
 });
 
-chrome.runtime.onMessage.addListener(({ tabId, ...message }: Complete) => {
+browser.runtime.onMessage.addListener(({ tabId, ...message }: Complete) => {
   if (message.key !== "completedTranslation") {
     return;
   }

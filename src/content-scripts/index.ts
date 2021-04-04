@@ -1,6 +1,7 @@
 import { sha256 } from "../core/sha256";
 import { unescapeHTML } from "../core/unescapeHTML";
 import { Complete, Request } from "../core/Messages";
+import { browser } from "webextension-polyfill-ts";
 
 type Translation = {
   translationKey: string;
@@ -55,7 +56,7 @@ const selectTranslationTarget = async (event: KeyboardEvent): Promise<void> => {
       dom: currentTarget,
     });
 
-    chrome.runtime.sendMessage({
+    browser.runtime.sendMessage({
       key: "requestTranslation",
       value: translationTarget,
       translationKey: key,
@@ -87,7 +88,7 @@ const selectTranslationTarget = async (event: KeyboardEvent): Promise<void> => {
 })();
 
 // listener for message from event page
-chrome.runtime.onMessage.addListener((message: Complete) => {
+browser.runtime.onMessage.addListener((message: Complete) => {
   if (message.key !== "completedTranslation") {
     return;
   }
