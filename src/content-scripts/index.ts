@@ -64,10 +64,11 @@ const selectTranslationTarget = async (event: KeyboardEvent): Promise<void> => {
   };
 
   const cancel = (event: KeyboardEvent): void => {
-    if (event.key === "Escape") {
+    if (event.key === "Escape" || (event.key === "c" && event.ctrlKey)) {
       document.removeEventListener("mousemove", mousemove);
       document.removeEventListener("click", click);
       document.removeEventListener("keydown", cancel);
+      document.addEventListener("keydown", selectTranslationTarget);
 
       const targets = document.querySelectorAll(".message-d__translator");
       targets.forEach((t) => {
@@ -79,6 +80,7 @@ const selectTranslationTarget = async (event: KeyboardEvent): Promise<void> => {
   document.addEventListener("mousemove", mousemove);
   document.addEventListener("click", click);
   document.addEventListener("keydown", cancel);
+  document.removeEventListener("keydown", selectTranslationTarget);
 };
 
 (function initialize() {
