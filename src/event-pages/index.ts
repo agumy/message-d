@@ -59,13 +59,15 @@ browser.runtime.onMessage.addListener(async (message: Request) => {
     }
   }
 
+  const extensionId = browser.runtime.id;
+
   browser.tabs.executeScript(deepL.id, {
     code: `
     (() => {
       const observer = new MutationObserver((mutations, instance) => {
         for (const mutation of mutations) {
           const text = mutation.target.innerHTML
-          chrome.runtime.sendMessage("dmiahonigdkjdnfmndheoblcagpmnlgg", 
+          chrome.runtime.sendMessage("${extensionId}", 
           { key: "completedTranslation",value: text, translationKey: "${message.translationKey}", tabId: "${tab.id}" })
           instance.disconnect();
         }
