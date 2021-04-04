@@ -25,7 +25,6 @@ browser.runtime.onMessage.addListener(async (message: Request) => {
     deepL = await browser.tabs.create({
       url: "https://www.deepl.com/translator",
       active: false,
-      pinned: true,
     });
     await new Promise((resolve) => {
       setTimeout(resolve, 3000);
@@ -44,22 +43,20 @@ browser.runtime.onMessage.addListener(async (message: Request) => {
     `,
   });
 
-  if (!res[0] || !res[0][0] || !res[0][1]) {
-    return;
-  }
+  if (res[0] && res[0][0] && res[0][1]) {
+    const [origianl, translated] = res[0];
+    const text = await sha256(origianl);
 
-  const [origianl, translated] = res[0];
-  const text = await sha256(origianl);
-
-  if (text === message.translationKey) {
-    const m = {
-      key: "completedTranslation",
-      value: translated,
-      translationKey: message.translationKey,
-      tabId: String(tab.id),
-    } as Complete;
-    browser.tabs.sendMessage(Number(tab.id), m);
-    return;
+    if (text === message.translationKey) {
+      const m = {
+        key: "completedTranslation",
+        value: translated,
+        translationKey: message.translationKey,
+        tabId: String(tab.id),
+      } as Complete;
+      browser.tabs.sendMessage(Number(tab.id), m);
+      return;
+    }
   }
 
   browser.tabs.executeScript(deepL.id, {
