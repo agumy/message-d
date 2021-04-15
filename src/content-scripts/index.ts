@@ -1,14 +1,21 @@
+import { browser } from "webextension-polyfill-ts";
+import { Complete, Request } from "../Messages";
 import { sha256 } from "../utils/sha256";
 import { unescapeHTML } from "../utils/unescapeHTML";
-import { Complete, Request } from "../Messages";
-import { browser } from "webextension-polyfill-ts";
 
 type Translation = {
   translationKey: string;
   dom: Element;
 };
 
+type Cache = {
+  innerHTML: string;
+  dom: Element;
+};
+
 let watingTranslation: Translation[] = [];
+const cacheForUndo: Cache[] = [];
+const cacheForRedo: Cache[] = [];
 
 const createLoadingElement = (): HTMLDivElement => {
   const loading = document.createElement("div");
@@ -79,9 +86,20 @@ const selectTranslationTarget = async (event: KeyboardEvent): Promise<void> => {
     }
   };
 
+  const undo = (event: KeyboardEvent): void => {
+    if (event.key === "z" && event.ctrlKey) {
+      const cache = cacheForUndo.pop();
+      if (cache) {
+        cache.dom.innerHTML = cache.innerHTML;
+        cacheForRedo.push(cache);
+      }
+    }
+  };
+
   document.addEventListener("mousemove", mousemove);
   document.addEventListener("click", click);
   document.addEventListener("keydown", cancel);
+  document.addEventListener("keydown", undo);
   document.removeEventListener("keydown", selectTranslationTarget);
 };
 
@@ -102,6 +120,10 @@ browser.runtime.onMessage.addListener((message: Complete) => {
   );
 
   if (target && message.value.trim()) {
+    cacheForUndo.push({
+      dom: target.dom,
+      innerHTML: target.dom.innerHTML,
+    });
     target.dom.innerHTML = `${unescapeHTML(message.value)}`;
   }
 
