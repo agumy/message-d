@@ -86,39 +86,9 @@ const selectTranslationTarget = async (event: KeyboardEvent): Promise<void> => {
     }
   };
 
-  const undo = (event: KeyboardEvent): void => {
-    if (event.key === "z" && event.ctrlKey) {
-      const cache = cacheForUndo.pop();
-      console.log(cache);
-      if (cache) {
-        cacheForRedo.push({
-          ...cache,
-          innerHTML: cache.dom.innerHTML,
-        });
-        cache.dom.innerHTML = cache.innerHTML;
-      }
-    }
-  };
-
-  const redo = (event: KeyboardEvent): void => {
-    if (event.key === "Z" && event.ctrlKey && event.shiftKey) {
-      const cache = cacheForRedo.pop();
-      console.log(cache);
-      if (cache) {
-        cacheForUndo.push({
-          ...cache,
-          innerHTML: cache.dom.innerHTML,
-        });
-        cache.dom.innerHTML = cache.innerHTML;
-      }
-    }
-  };
-
   document.addEventListener("mousemove", mousemove);
   document.addEventListener("click", click);
   document.addEventListener("keydown", cancel);
-  document.addEventListener("keydown", undo);
-  document.addEventListener("keydown", redo);
   document.removeEventListener("keydown", selectTranslationTarget);
 };
 
@@ -152,3 +122,34 @@ browser.runtime.onMessage.addListener((message: Complete) => {
   );
   document.body.removeChild(document.getElementById("message-d__loader-id")!);
 });
+
+const undo = (event: KeyboardEvent): void => {
+  if (event.key === "z" && event.ctrlKey) {
+    const cache = cacheForUndo.pop();
+    console.log(cache);
+    if (cache) {
+      cacheForRedo.push({
+        ...cache,
+        innerHTML: cache.dom.innerHTML,
+      });
+      cache.dom.innerHTML = cache.innerHTML;
+    }
+  }
+};
+
+const redo = (event: KeyboardEvent): void => {
+  if (event.key === "Z" && event.ctrlKey && event.shiftKey) {
+    const cache = cacheForRedo.pop();
+    console.log(cache);
+    if (cache) {
+      cacheForUndo.push({
+        ...cache,
+        innerHTML: cache.dom.innerHTML,
+      });
+      cache.dom.innerHTML = cache.innerHTML;
+    }
+  }
+};
+
+document.addEventListener("keydown", undo);
+document.addEventListener("keydown", redo);
