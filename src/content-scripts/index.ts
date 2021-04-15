@@ -36,6 +36,8 @@ const selectTranslationTarget = async (event: KeyboardEvent): Promise<void> => {
   };
 
   const click = async (e: MouseEvent): Promise<void> => {
+    e.stopImmediatePropagation();
+    e.stopPropagation();
     e.preventDefault();
 
     const currentTarget = document.elementFromPoint(e.clientX, e.clientY);
