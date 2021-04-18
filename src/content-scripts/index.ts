@@ -126,7 +126,6 @@ browser.runtime.onMessage.addListener((message: Complete) => {
 const undo = (event: KeyboardEvent): void => {
   if (event.key === "z" && event.ctrlKey) {
     const cache = cacheForUndo.pop();
-    console.log(cache);
     if (cache) {
       cacheForRedo.push({
         ...cache,
@@ -140,7 +139,6 @@ const undo = (event: KeyboardEvent): void => {
 const redo = (event: KeyboardEvent): void => {
   if (event.key === "Z" && event.ctrlKey && event.shiftKey) {
     const cache = cacheForRedo.pop();
-    console.log(cache);
     if (cache) {
       cacheForUndo.push({
         ...cache,
