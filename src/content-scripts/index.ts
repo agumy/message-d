@@ -59,7 +59,9 @@ const selectTranslationTarget = async (event: KeyboardEvent): Promise<void> => {
     document.body.appendChild(loading);
 
     const translationTarget = currentTarget.innerHTML;
-    const key = await sha256(translationTarget);
+    const lineBreaked = translationTarget.replaceAll(/\. /g, "$&\n");
+
+    const key = await sha256(lineBreaked);
     watingTranslation.push({
       translationKey: key,
       dom: currentTarget,
@@ -67,7 +69,7 @@ const selectTranslationTarget = async (event: KeyboardEvent): Promise<void> => {
 
     browser.runtime.sendMessage({
       key: "requestTranslation",
-      value: translationTarget,
+      value: lineBreaked,
       translationKey: key,
     } as Request);
   };
