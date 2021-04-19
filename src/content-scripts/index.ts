@@ -76,10 +76,29 @@ const selectTranslationTarget = async (event: KeyboardEvent): Promise<void> => {
     } as Request);
   };
 
+  const contextmenu = (event: MouseEvent) => {
+    event.preventDefault();
+    event.stopPropagation();
+
+    const currentTarget = document.elementFromPoint(
+      event.clientX,
+      event.clientY
+    );
+    if (!currentTarget) {
+      return;
+    }
+
+    const cache = cacheForUndo.find((e) => e.dom.isEqualNode(currentTarget));
+    if (cache) {
+      console.log(cache.innerHTML);
+    }
+  };
+
   const cancel = (event: KeyboardEvent): void => {
     if (event.key === "Escape" || (event.key === "c" && event.ctrlKey)) {
       document.removeEventListener("mousemove", mousemove);
       document.removeEventListener("click", click);
+      document.removeEventListener("contextmenu", contextmenu);
       document.removeEventListener("keydown", cancel);
       document.addEventListener("keydown", selectTranslationTarget);
 
@@ -92,6 +111,7 @@ const selectTranslationTarget = async (event: KeyboardEvent): Promise<void> => {
 
   document.addEventListener("mousemove", mousemove);
   document.addEventListener("click", click);
+  document.addEventListener("contextmenu", contextmenu);
   document.addEventListener("keydown", cancel);
   document.removeEventListener("keydown", selectTranslationTarget);
 };
