@@ -91,7 +91,7 @@ const selectTranslationTarget = async (event: KeyboardEvent): Promise<void> => {
   };
 
   document.addEventListener("mousemove", mousemove);
-  document.addEventListener("click", click);
+  document.addEventListener("click", click, true);
   document.addEventListener("keydown", cancel);
   document.removeEventListener("keydown", selectTranslationTarget);
 };
