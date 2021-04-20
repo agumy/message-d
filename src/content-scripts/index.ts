@@ -79,7 +79,7 @@ const selectTranslationTarget = async (event: KeyboardEvent): Promise<void> => {
   const cancel = (event: KeyboardEvent): void => {
     if (event.key === "Escape" || (event.key === "c" && event.ctrlKey)) {
       document.removeEventListener("mousemove", mousemove);
-      document.removeEventListener("click", click);
+      document.removeEventListener("click", click, true);
       document.removeEventListener("keydown", cancel);
       document.addEventListener("keydown", selectTranslationTarget);
 
