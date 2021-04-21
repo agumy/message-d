@@ -59,9 +59,8 @@ const selectTranslationTarget = async (event: KeyboardEvent): Promise<void> => {
     document.body.appendChild(loading);
 
     const translationTarget = currentTarget.innerHTML;
-    const lineBreaked = translationTarget
-      .replaceAll(/\. /g, "$&\n")
-      .replaceAll(/<[a-zA-Z](.*?[^?])?>/g, "\n$&");
+    const lineBreaked = translationTarget.replaceAll(/\. /g, "$&\n");
+    // .replaceAll(/<[a-zA-Z](.*?[^?])?>/g, "\n$&");
 
     const key = await sha256(lineBreaked);
     watingTranslation.push({
