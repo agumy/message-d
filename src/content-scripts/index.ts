@@ -2,8 +2,10 @@ import { browser } from "webextension-polyfill-ts";
 import { Complete, Request } from "../Messages";
 import { sha256 } from "../utils/sha256";
 import { unescapeHTML } from "../utils/unescapeHTML";
+import { waitAsync } from "../utils/withAsync";
 
 type Translation = {
+  original: string;
   translationKey: string;
   dom: Element;
 };
@@ -16,6 +18,8 @@ type Cache = {
 let watingTranslation: Translation[] = [];
 const cacheForUndo: Cache[] = [];
 let cacheForRedo: Cache[] = [];
+
+let isDoing: boolean = false;
 
 const createLoadingElement = (): HTMLDivElement => {
   const loading = document.createElement("div");
@@ -64,15 +68,22 @@ const selectTranslationTarget = async (event: KeyboardEvent): Promise<void> => {
 
     const key = await sha256(lineBreaked);
     watingTranslation.push({
+      original: lineBreaked,
       translationKey: key,
       dom: currentTarget,
     });
 
-    browser.runtime.sendMessage({
-      key: "requestTranslation",
-      value: lineBreaked,
-      translationKey: key,
-    } as Request);
+    waitAsync(
+      () => !isDoing,
+      () => {
+        isDoing = true;
+        browser.runtime.sendMessage({
+          key: "requestTranslation",
+          value: watingTranslation[0]?.original,
+          translationKey: watingTranslation[0]?.translationKey,
+        } as Request);
+      }
+    );
   };
 
   const cancel = (event: KeyboardEvent): void => {
@@ -124,6 +135,7 @@ browser.runtime.onMessage.addListener((message: Complete) => {
   watingTranslation = watingTranslation.filter(
     (e) => e.translationKey !== target?.translationKey
   );
+  isDoing = false;
   document.body.removeChild(document.getElementById("message-d__loader-id")!);
 });
 
