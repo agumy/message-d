@@ -59,6 +59,11 @@ const selectTranslationTarget = async (event: KeyboardEvent): Promise<void> => {
 
     target?.classList.remove("message-d__translator");
 
+    const loading = createLoadingElement();
+    if (!document.querySelector("#message-d__loader-id")) {
+      document.body.appendChild(loading);
+    }
+
     const translationTarget = currentTarget.innerHTML;
     const lineBreaked = translationTarget.replaceAll(/\. /g, "$&\n");
     // .replaceAll(/<[a-zA-Z](.*?[^?])?>/g, "\n$&");
@@ -74,11 +79,6 @@ const selectTranslationTarget = async (event: KeyboardEvent): Promise<void> => {
       () => !isDoing,
       () => {
         isDoing = true;
-
-        const loading = createLoadingElement();
-        if (!document.querySelector(".message-d__loader")) {
-          document.body.appendChild(loading);
-        }
 
         browser.runtime.sendMessage({
           key: "requestTranslation",
@@ -139,7 +139,13 @@ browser.runtime.onMessage.addListener((message: Complete) => {
     (e) => e.translationKey !== target?.translationKey
   );
   isDoing = false;
-  document.body.removeChild(document.getElementById("message-d__loader-id")!);
+
+  if (!watingTranslation.length) {
+    const loader = document.querySelector("#message-d__loader-id");
+    if (loader) {
+      document.body.removeChild(loader);
+    }
+  }
 });
 
 const undo = (event: KeyboardEvent): void => {
