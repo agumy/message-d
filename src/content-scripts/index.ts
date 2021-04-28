@@ -68,6 +68,10 @@ const selectTranslationTarget = async (event: KeyboardEvent): Promise<void> => {
     const lineBreaked = translationTarget.replaceAll(/\. /g, "$&\n");
     // .replaceAll(/<[a-zA-Z](.*?[^?])?>/g, "\n$&");
 
+    // if (lineBreaked.length < 1000) {
+    //   lineBreaked.split(/<\/[a-z]/);
+    // }
+
     const key = await sha256(lineBreaked);
     watingTranslation.push({
       original: lineBreaked,
