@@ -2,7 +2,7 @@ import { browser } from "webextension-polyfill-ts";
 import { Complete, Request } from "../Messages";
 import { sha256 } from "../utils/sha256";
 import { unescapeHTML } from "../utils/unescapeHTML";
-import { waitAsync } from "../utils/withAsync";
+import { waitAsync } from "../utils/waitAsync";
 
 type Translation = {
   original: string;
