@@ -121,7 +121,21 @@ const selectTranslationTarget = async (event: KeyboardEvent): Promise<void> => {
 
   setTimeout(() => {
     const a = geAllTextNode();
-    console.log(a);
+
+    const test = [];
+    for (const node of a) {
+      const rect = node.getBoundingClientRect();
+      if (!rect) {
+        continue;
+      }
+      if (
+        (rect.top >= 0 && rect.top <= window.innerHeight) ||
+        (rect.bottom >= 0 && rect.bottom <= window.innerHeight)
+      ) {
+        test.push(node);
+      }
+    }
+    console.log(test);
   }, 3000);
 })();
 
