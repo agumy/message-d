@@ -3,6 +3,7 @@ import { Complete, Request } from "../Messages";
 import { sha256 } from "../utils/sha256";
 import { unescapeHTML } from "../utils/unescapeHTML";
 import { waitAsync } from "../utils/waitAsync";
+import { geAllTextNode } from "./getAllTextNode";
 
 type Translation = {
   original: string;
@@ -117,6 +118,11 @@ const selectTranslationTarget = async (event: KeyboardEvent): Promise<void> => {
   document.addEventListener("keydown", selectTranslationTarget);
 
   console.info(`[message-d] completed loading scripts`);
+
+  setTimeout(() => {
+    const a = geAllTextNode();
+    console.log(a);
+  }, 3000);
 })();
 
 // listener for message from event page
