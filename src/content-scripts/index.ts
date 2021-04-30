@@ -116,7 +116,7 @@ const selectTranslationTarget = async (event: KeyboardEvent): Promise<void> => {
 };
 
 const pageTranslation = async (event: KeyboardEvent) => {
-  if (!event.ctrlKey && event.key !== "p") {
+  if (!event.ctrlKey || event.key !== "p") {
     return;
   }
 
