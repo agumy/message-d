@@ -3,6 +3,7 @@ import { Complete, Request } from "../Messages";
 import { sha256 } from "../utils/sha256";
 import { unescapeHTML } from "../utils/unescapeHTML";
 import { waitAsync } from "../utils/waitAsync";
+import { getAllTextNode } from "./getAllTextNode";
 
 type Translation = {
   original: string;
@@ -117,6 +118,25 @@ const selectTranslationTarget = async (event: KeyboardEvent): Promise<void> => {
   document.addEventListener("keydown", selectTranslationTarget);
 
   console.info(`[message-d] completed loading scripts`);
+
+  const allNodes = getAllTextNode();
+  console.log(allNodes);
+
+  const translationTargets = [];
+  for (const node of allNodes) {
+    const rect = node.getBoundingClientRect();
+    if (!rect) {
+      continue;
+    }
+    if (
+      (rect.top >= 0 && rect.top <= window.innerHeight) ||
+      (rect.bottom >= 0 && rect.bottom <= window.innerHeight)
+    ) {
+      translationTargets.push(node);
+    }
+  }
+
+  console.log(translationTargets);
 })();
 
 // listener for message from event page
