@@ -138,6 +138,8 @@ const pageTranslation = async (event: KeyboardEvent) => {
     }
   }
 
+  console.log(translationTargets);
+
   for (const node of translationTargets) {
     const translationTarget = node.innerHTML;
     const lineBreaked = translationTarget.replaceAll(/\. /g, "$&\n");
