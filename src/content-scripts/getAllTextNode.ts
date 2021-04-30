@@ -1,7 +1,7 @@
-const htmlTagsNoTranslate = ["TITLE", "SCRIPT", "STYLE", "TEXTAREA"];
-const htmlTagsInlineIgnore = ["BR", "CODE", "KBD", "WBR", "PRE"];
-const textNodes: Node[] = [];
-const elements: Element[] = [];
+// const htmlTagsNoTranslate = ["TITLE", "SCRIPT", "STYLE", "TEXTAREA", "SVG"];
+// const htmlTagsInlineIgnore = ["BR", "CODE", "KBD", "WBR", "PRE"];
+// const textNodes: Node[] = [];
+// const elements: Element[] = [];
 
 // export const geAllTextNode = (target: Node = document.body): Node[] => {
 //   if (
@@ -27,18 +27,21 @@ const elements: Element[] = [];
 //   return textNodes;
 // };
 
-export const geAllTextNode = (target: Element = document.body): Element[] => {
-  const shouldPush = Array.from(target.childNodes).some(
-    (node) => node.nodeType === 3 && node.textContent!.trim()
-  );
-  if (shouldPush) {
-    elements.push(target);
-  } else {
-    for (const node of Array.from(target.childNodes)) {
-      if (node.nodeType === 1 && !htmlTagsNoTranslate.includes(node.nodeName)) {
-        geAllTextNode(node as Element);
-      }
-    }
-  }
-  return elements;
-};
+// // export const geAllTextNode = (target: Element = document.body): Element[] => {
+// //   const shouldPush = Array.from(target.childNodes).some(
+// //     (node) => node.nodeType === 3 && node.textContent!.trim()
+// //   );
+// //   if (shouldPush) {
+// //     elements.push(target);
+// //   } else {
+// //     for (const node of Array.from(target.childNodes)) {
+// //       if (
+// //         node.nodeType === 1 &&
+// //         !htmlTagsNoTranslate.includes(node.nodeName.toUpperCase())
+// //       ) {
+// //         geAllTextNode(node as Element);
+// //       }
+// //     }
+// //   }
+// //   return elements;
+// // };
