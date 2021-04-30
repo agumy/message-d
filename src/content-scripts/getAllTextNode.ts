@@ -1,5 +1,14 @@
-const htmlTagsNoTranslate = ["TITLE", "SCRIPT", "STYLE", "TEXTAREA", "SVG"];
-const htmlTagsInlineIgnore = ["BR", "CODE", "KBD", "WBR", "PRE"];
+const htmlTagsNoTranslate = [
+  "TITLE",
+  "SCRIPT",
+  "STYLE",
+  "TEXTAREA",
+  "SVG",
+  "CODE",
+  "PRE",
+];
+const shoudNotTranslate = ["CODE", "PRE"];
+const htmlTagsInlineIgnore = ["BR", "KBD", "WBR"];
 // const textNodes: Node[] = [];
 const elements: Element[] = [];
 
@@ -35,7 +44,7 @@ const hasChildOnlyTextNodeRecursive = (
   node: Node,
   deps: number = 0
 ): boolean => {
-  if (node instanceof Element && node.innerHTML.length > 500) {
+  if (node instanceof Element && node.innerHTML.length > 1000) {
     return false;
   }
 

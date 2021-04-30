@@ -20,6 +20,7 @@ let watingTranslation: Translation[] = [];
 const cacheForUndo: Cache[] = [];
 let cacheForRedo: Cache[] = [];
 let allNodes: Element[] = [];
+let allNodesWithTranslation: { isTranslated: boolean; node: Element }[] = [];
 
 let isDoing: boolean = false;
 
@@ -122,8 +123,12 @@ const pageTranslation = async (event: KeyboardEvent) => {
 
   const translationTargets: Element[] = [];
 
-  for (const node of allNodes) {
-    const rect = node.getBoundingClientRect();
+  for (const t of allNodesWithTranslation) {
+    if (t.isTranslated) {
+      continue;
+    }
+
+    const rect = t.node.getBoundingClientRect();
     if (!rect) {
       continue;
     }
@@ -131,14 +136,13 @@ const pageTranslation = async (event: KeyboardEvent) => {
       (rect.top >= 0 && rect.top <= window.innerHeight) ||
       (rect.bottom >= 0 && rect.bottom <= window.innerHeight)
     ) {
-      if (!node.textContent?.trim()) {
+      if (!t.node.textContent?.trim()) {
         continue;
       }
-      translationTargets.push(node);
+      t.isTranslated = true;
+      translationTargets.push(t.node);
     }
   }
-
-  console.log(translationTargets);
 
   for (const node of translationTargets) {
     const translationTarget = node.innerHTML;
@@ -172,7 +176,11 @@ const pageTranslation = async (event: KeyboardEvent) => {
 
   console.info(`[message-d] completed loading scripts`);
 
-  allNodes = getAllTextNode();
+  allNodes = getAllTextNode().filter((element) => element.textContent?.trim());
+  allNodesWithTranslation = allNodes.map((e) => ({
+    isTranslated: false,
+    node: e,
+  }));
 })();
 
 // listener for message from event page
