@@ -19,6 +19,7 @@ type Cache = {
 let watingTranslation: Translation[] = [];
 const cacheForUndo: Cache[] = [];
 let cacheForRedo: Cache[] = [];
+let allNodes: Element[] = [];
 
 let isDoing: boolean = false;
 
@@ -114,15 +115,13 @@ const selectTranslationTarget = async (event: KeyboardEvent): Promise<void> => {
   document.removeEventListener("keydown", selectTranslationTarget);
 };
 
-(function initialize() {
-  document.addEventListener("keydown", selectTranslationTarget);
+const pageTranslation = async (event: KeyboardEvent) => {
+  if (!event.ctrlKey && event.key !== "p") {
+    return;
+  }
 
-  console.info(`[message-d] completed loading scripts`);
+  const translationTargets: Element[] = [];
 
-  const allNodes = getAllTextNode();
-  console.log(allNodes);
-
-  const translationTargets = [];
   for (const node of allNodes) {
     const rect = node.getBoundingClientRect();
     if (!rect) {
@@ -132,11 +131,46 @@ const selectTranslationTarget = async (event: KeyboardEvent): Promise<void> => {
       (rect.top >= 0 && rect.top <= window.innerHeight) ||
       (rect.bottom >= 0 && rect.bottom <= window.innerHeight)
     ) {
+      if (!node.textContent?.trim()) {
+        continue;
+      }
       translationTargets.push(node);
     }
   }
 
-  console.log(translationTargets);
+  for (const node of translationTargets) {
+    const translationTarget = node.innerHTML;
+    const lineBreaked = translationTarget.replaceAll(/\. /g, "$&\n");
+
+    const key = await sha256(lineBreaked);
+    watingTranslation.push({
+      original: lineBreaked,
+      translationKey: key,
+      dom: node,
+    });
+
+    waitAsync(
+      () => !isDoing,
+      () => {
+        isDoing = true;
+
+        browser.runtime.sendMessage({
+          key: "requestTranslation",
+          value: watingTranslation[0]?.original,
+          translationKey: watingTranslation[0]?.translationKey,
+        } as Request);
+      }
+    );
+  }
+};
+
+(async function initialize() {
+  document.addEventListener("keydown", selectTranslationTarget);
+  document.addEventListener("keydown", pageTranslation);
+
+  console.info(`[message-d] completed loading scripts`);
+
+  allNodes = getAllTextNode();
 })();
 
 // listener for message from event page
