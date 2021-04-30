@@ -116,57 +116,62 @@ const selectTranslationTarget = async (event: KeyboardEvent): Promise<void> => {
   document.removeEventListener("keydown", selectTranslationTarget);
 };
 
-const pageTranslation = async (event: KeyboardEvent) => {
+const pageTranslation = (event: KeyboardEvent) => {
   if (!event.ctrlKey || event.key !== "p") {
     return;
   }
 
-  const translationTargets: Element[] = [];
+  _pageTranslation();
 
-  for (const t of allNodesWithTranslation) {
-    if (t.isTranslated) {
-      continue;
-    }
+  async function _pageTranslation() {
+    const translationTargets: Element[] = [];
 
-    const rect = t.node.getBoundingClientRect();
-    if (!rect) {
-      continue;
-    }
-    if (
-      (rect.top >= 0 && rect.top <= window.innerHeight) ||
-      (rect.bottom >= 0 && rect.bottom <= window.innerHeight)
-    ) {
-      if (!t.node.textContent?.trim()) {
+    for (const t of allNodesWithTranslation) {
+      if (t.isTranslated) {
         continue;
       }
-      t.isTranslated = true;
-      translationTargets.push(t.node);
-    }
-  }
 
-  for (const node of translationTargets) {
-    const translationTarget = node.innerHTML;
-    const lineBreaked = translationTarget.replaceAll(/\. /g, "$&\n");
-
-    const key = await sha256(lineBreaked);
-    watingTranslation.push({
-      original: lineBreaked,
-      translationKey: key,
-      dom: node,
-    });
-
-    waitAsync(
-      () => !isDoing,
-      () => {
-        isDoing = true;
-
-        browser.runtime.sendMessage({
-          key: "requestTranslation",
-          value: watingTranslation[0]?.original,
-          translationKey: watingTranslation[0]?.translationKey,
-        } as Request);
+      const rect = t.node.getBoundingClientRect();
+      if (!rect) {
+        continue;
       }
-    );
+      if (
+        (rect.top >= 0 && rect.top <= window.innerHeight) ||
+        (rect.bottom >= 0 && rect.bottom <= window.innerHeight)
+      ) {
+        if (!t.node.textContent?.trim()) {
+          continue;
+        }
+        t.isTranslated = true;
+        translationTargets.push(t.node);
+      }
+    }
+
+    for (const node of translationTargets) {
+      const translationTarget = node.innerHTML;
+      const lineBreaked = translationTarget.replaceAll(/\. /g, "$&\n");
+
+      const key = await sha256(lineBreaked);
+      watingTranslation.push({
+        original: lineBreaked,
+        translationKey: key,
+        dom: node,
+      });
+
+      waitAsync(
+        () => !isDoing,
+        () => {
+          isDoing = true;
+
+          browser.runtime.sendMessage({
+            key: "requestTranslation",
+            value: watingTranslation[0]?.original,
+            translationKey: watingTranslation[0]?.translationKey,
+          } as Request);
+        }
+      );
+    }
+    setTimeout(_pageTranslation, 2000);
   }
 };
 
