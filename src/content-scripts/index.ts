@@ -140,11 +140,6 @@ const translateStreamly = async (event: KeyboardEvent): Promise<void> => {
 
     target?.classList.remove("message-d__translator");
 
-    const loading = createLoadingElement();
-    if (!document.querySelector("#message-d__loader-id")) {
-      document.body.appendChild(loading);
-    }
-
     const allTargets = await getAllTextNodeConsideringSelector(currentTarget);
     const allNodes = allTargets
       .filter((element) => element.textContent?.trim())
@@ -167,6 +162,11 @@ const translateStreamly = async (event: KeyboardEvent): Promise<void> => {
 
         return false;
       });
+
+      if (targets.length && !document.querySelector("#message-d__loader-id")) {
+        const loading = createLoadingElement();
+        document.body.appendChild(loading);
+      }
 
       for (const target of targets) {
         const translationTarget = target.node.innerHTML;
