@@ -3,7 +3,7 @@ import { Complete, Request } from "../Messages";
 import { sha256 } from "../utils/sha256";
 import { unescapeHTML } from "../utils/unescapeHTML";
 import { waitAsync } from "../utils/waitAsync";
-import { getAllTextNode } from "./getAllTextNode";
+import { getAllTextNodeConsideringSelector } from "./getAllTextNode";
 
 type Translation = {
   original: string;
@@ -145,7 +145,8 @@ const translateStreamly = async (event: KeyboardEvent): Promise<void> => {
       document.body.appendChild(loading);
     }
 
-    const allNodes = getAllTextNode(currentTarget)
+    const allTargets = await getAllTextNodeConsideringSelector(currentTarget);
+    const allNodes = allTargets
       .filter((element) => element.textContent?.trim())
       .map((e) => ({
         isTranslated: false,

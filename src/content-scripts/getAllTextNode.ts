@@ -1,3 +1,5 @@
+import { getSelectorStorage } from "../utils/storage";
+
 const htmlTagsNoTranslate = [
   "TITLE",
   "SCRIPT",
@@ -52,19 +54,30 @@ const hasChildOnlyTextNodeRecursive = (
   );
 };
 
-export const getAllTextNode = (target: Element = document.body): Element[] => {
-  const shouldPush = hasChildOnlyTextNodeRecursive(target);
-  if (shouldPush) {
-    elements.push(target);
-  } else {
-    for (const node of Array.from(target.childNodes)) {
-      if (
-        node.nodeType === 1 &&
-        !htmlTagsNoTranslate.includes(node.nodeName.toUpperCase())
-      ) {
-        getAllTextNode(node as Element);
+export const getAllTextNodeConsideringSelector = async (
+  target: Element = document.body
+) => {
+  const { selectors } = await getSelectorStorage();
+
+  const getAllTextNode = (target: Element): Element[] => {
+    const shouldPush = hasChildOnlyTextNodeRecursive(target);
+    if (shouldPush) {
+      elements.push(target);
+    } else {
+      for (const node of Array.from(target.childNodes)) {
+        if (
+          node.nodeType === 1 &&
+          !htmlTagsNoTranslate.includes(node.nodeName.toUpperCase()) &&
+          !Array.from((node as Element).classList).some((c) =>
+            selectors.includes(c)
+          )
+        ) {
+          getAllTextNode(node as Element);
+        }
       }
     }
-  }
-  return elements;
+    return elements;
+  };
+
+  return getAllTextNode(target);
 };
