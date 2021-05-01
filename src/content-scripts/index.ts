@@ -36,6 +36,7 @@ const selectTranslationTarget = async (event: KeyboardEvent): Promise<void> => {
   }
 
   let target: null | Element = null;
+
   const mousemove = (e: MouseEvent): void => {
     let x = e.clientX;
     let y = e.clientY;
@@ -144,34 +145,56 @@ const translateStreamly = async (event: KeyboardEvent): Promise<void> => {
       document.body.appendChild(loading);
     }
 
-    const allNodes = getAllTextNode(currentTarget).filter((element) =>
-      element.textContent?.trim()
-    );
+    const allNodes = getAllTextNode(currentTarget)
+      .filter((element) => element.textContent?.trim())
+      .map((e) => ({
+        isTranslated: false,
+        node: e,
+      }));
 
-    for (const node of allNodes) {
-      const translationTarget = node.innerHTML;
-      const lineBreaked = translationTarget.replaceAll(/\. /g, "$&\n");
+    const translateInViewport = async () => {
+      const targets = allNodes.filter((t, i) => {
+        if (t.isTranslated) {
+          return false;
+        }
 
-      const key = await sha256(lineBreaked);
-      watingTranslation.push({
-        original: lineBreaked,
-        translationKey: key,
-        dom: node,
+        const rect = t.node.getBoundingClientRect();
+        if (rect.top >= 0 && rect.top <= window.innerHeight) {
+          allNodes[i]!.isTranslated = true;
+          return true;
+        }
+
+        return false;
       });
 
-      waitAsync(
-        () => !isDoing,
-        () => {
-          isDoing = true;
+      for (const target of targets) {
+        const translationTarget = target.node.innerHTML;
+        const lineBreaked = translationTarget.replaceAll(/\. /g, "$&\n");
 
-          browser.runtime.sendMessage({
-            key: "requestTranslation",
-            value: watingTranslation[0]?.original,
-            translationKey: watingTranslation[0]?.translationKey,
-          } as Request);
-        }
-      );
-    }
+        const key = await sha256(lineBreaked);
+        watingTranslation.push({
+          original: lineBreaked,
+          translationKey: key,
+          dom: target.node,
+        });
+
+        waitAsync(
+          () => !isDoing,
+          () => {
+            isDoing = true;
+            browser.runtime.sendMessage({
+              key: "requestTranslation",
+              value: watingTranslation[0]?.original,
+              translationKey: watingTranslation[0]?.translationKey,
+            } as Request);
+          }
+        );
+      }
+
+      setTimeout(translateInViewport, 2000);
+    };
+
+    translateInViewport();
   };
 
   const cancel = (event: KeyboardEvent): void => {
