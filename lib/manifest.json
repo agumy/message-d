@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "manifest_version": 2,
   "description": "ブラウザ上で選択した文字列をDeepLで翻訳して表示します。",
-  "permissions": ["tabs", "activeTab", "contextMenus", "https://*/"],
+  "permissions": ["tabs", "activeTab", "contextMenus", "https://*/", "storage"],
   "content_scripts": [
     {
       "matches": ["http://*/*", "https://*/*"],
