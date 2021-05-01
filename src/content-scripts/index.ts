@@ -19,8 +19,6 @@ type Cache = {
 let watingTranslation: Translation[] = [];
 const cacheForUndo: Cache[] = [];
 let cacheForRedo: Cache[] = [];
-let allNodes: Element[] = [];
-let allNodesWithTranslation: { isTranslated: boolean; node: Element }[] = [];
 
 let isDoing: boolean = false;
 
@@ -69,11 +67,6 @@ const selectTranslationTarget = async (event: KeyboardEvent): Promise<void> => {
 
     const translationTarget = currentTarget.innerHTML;
     const lineBreaked = translationTarget.replaceAll(/\. /g, "$&\n");
-    // .replaceAll(/<[a-zA-Z](.*?[^?])?>/g, "\n$&");
-
-    // if (lineBreaked.length < 1000) {
-    //   lineBreaked.split(/<\/[a-z]/);
-    // }
 
     const key = await sha256(lineBreaked);
     watingTranslation.push({
@@ -116,35 +109,46 @@ const selectTranslationTarget = async (event: KeyboardEvent): Promise<void> => {
   document.removeEventListener("keydown", selectTranslationTarget);
 };
 
-const pageTranslation = (event: KeyboardEvent) => {
-  if (!event.ctrlKey || event.key !== "p") {
+const translateStreamly = async (event: KeyboardEvent): Promise<void> => {
+  if (event.key !== "p" || !event.ctrlKey) {
     return;
   }
 
-  _pageTranslation();
+  let target: null | Element = null;
+  const mousemove = (e: MouseEvent): void => {
+    let x = e.clientX;
+    let y = e.clientY;
+    const newTarget = document.elementFromPoint(x, y);
+    if (!target?.isEqualNode(newTarget)) {
+      target?.classList.remove("message-d__translator");
+      newTarget?.classList.add("message-d__translator");
+      target = newTarget;
+    }
+  };
 
-  async function _pageTranslation() {
-    const translationTargets: Element[] = [];
+  const click = async (e: MouseEvent): Promise<void> => {
+    e.stopImmediatePropagation();
+    e.stopPropagation();
+    e.preventDefault();
 
-    for (const t of allNodesWithTranslation) {
-      if (t.isTranslated) {
-        continue;
-      }
+    const currentTarget = document.elementFromPoint(e.clientX, e.clientY);
 
-      const rect = t.node.getBoundingClientRect();
-      if (
-        (rect.top >= 0 && rect.top <= window.innerHeight) ||
-        (rect.bottom >= 0 && rect.bottom <= window.innerHeight)
-      ) {
-        if (!t.node.textContent?.trim()) {
-          continue;
-        }
-        t.isTranslated = true;
-        translationTargets.push(t.node);
-      }
+    if (!currentTarget) {
+      return;
     }
 
-    for (const node of translationTargets) {
+    target?.classList.remove("message-d__translator");
+
+    const loading = createLoadingElement();
+    if (!document.querySelector("#message-d__loader-id")) {
+      document.body.appendChild(loading);
+    }
+
+    const allNodes = getAllTextNode(currentTarget).filter((element) =>
+      element.textContent?.trim()
+    );
+
+    for (const node of allNodes) {
       const translationTarget = node.innerHTML;
       const lineBreaked = translationTarget.replaceAll(/\. /g, "$&\n");
 
@@ -168,21 +172,33 @@ const pageTranslation = (event: KeyboardEvent) => {
         }
       );
     }
-    setTimeout(_pageTranslation, 2000);
-  }
+  };
+
+  const cancel = (event: KeyboardEvent): void => {
+    if (event.key === "Escape" || (event.key === "p" && event.ctrlKey)) {
+      document.removeEventListener("mousemove", mousemove);
+      document.removeEventListener("click", click, true);
+      document.removeEventListener("keydown", cancel);
+      document.addEventListener("keydown", translateStreamly);
+
+      const targets = document.querySelectorAll(".message-d__translator");
+      targets.forEach((t) => {
+        t.classList.remove("message-d__translator");
+      });
+    }
+  };
+
+  document.addEventListener("mousemove", mousemove);
+  document.addEventListener("click", click, true);
+  document.addEventListener("keydown", cancel);
+  document.removeEventListener("keydown", translateStreamly);
 };
 
 (async function initialize() {
   document.addEventListener("keydown", selectTranslationTarget);
-  document.addEventListener("keydown", pageTranslation);
+  document.addEventListener("keydown", translateStreamly);
 
   console.info(`[message-d] completed loading scripts`);
-
-  allNodes = getAllTextNode().filter((element) => element.textContent?.trim());
-  allNodesWithTranslation = allNodes.map((e) => ({
-    isTranslated: false,
-    node: e,
-  }));
 })();
 
 // listener for message from event page
