@@ -132,9 +132,6 @@ const pageTranslation = (event: KeyboardEvent) => {
       }
 
       const rect = t.node.getBoundingClientRect();
-      if (!rect) {
-        continue;
-      }
       if (
         (rect.top >= 0 && rect.top <= window.innerHeight) ||
         (rect.bottom >= 0 && rect.bottom <= window.innerHeight)
