@@ -7,34 +7,9 @@ const htmlTagsNoTranslate = [
   "CODE",
   "PRE",
 ];
-const shoudNotTranslate = ["CODE", "PRE"];
 const htmlTagsInlineIgnore = ["BR", "KBD", "WBR"];
-// const textNodes: Node[] = [];
+
 const elements: Element[] = [];
-
-// export const geAllTextNode = (target: Node = document.body): Node[] => {
-//   if (
-//     htmlTagsNoTranslate.includes(target.nodeName) ||
-//     htmlTagsInlineIgnore.includes(target.nodeName)
-//   ) {
-//     // @ts-expect-error
-//     return;
-//   }
-
-//   for (const node of Array.from(target.childNodes)) {
-//     if (node.nodeType === 3 && node.textContent!.trim().length > 0) {
-//       textNodes.push(node);
-//     }
-
-//     if (node.hasChildNodes()) {
-//       for (const n of Array.from(node.childNodes)) {
-//         geAllTextNode(n);
-//       }
-//     }
-//   }
-
-//   return textNodes;
-// };
 
 const hasChildOnlyTextNode = (node: Node) =>
   node.childNodes.length &&
