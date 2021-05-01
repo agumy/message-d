@@ -1,4 +1,4 @@
-import { getSelectorStorage, removeFromStorage } from "./storage";
+import { getSelectorStorage, removeFromStorage } from "../utils/storage";
 
 export const createListItem = (value: string) => {
   const li = document.createElement("li");
