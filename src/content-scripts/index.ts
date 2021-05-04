@@ -182,11 +182,14 @@ const translateStreamly = async (event: KeyboardEvent): Promise<void> => {
         waitAsync(
           () => !isDoing,
           () => {
+            if (!watingTranslation[0]) {
+              return;
+            }
             isDoing = true;
             browser.runtime.sendMessage({
               key: "requestTranslation",
-              value: watingTranslation[0]?.original,
-              translationKey: watingTranslation[0]?.translationKey,
+              value: watingTranslation[0].original,
+              translationKey: watingTranslation[0].translationKey,
             } as Request);
           }
         );
