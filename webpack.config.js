@@ -3,6 +3,7 @@ const path = require("path");
 const config = {
   entry: {
     "content-scripts/index": "./src/content-scripts/index.ts",
+    "content-scripts/api-mode": "./src/content-scripts/api-mode.ts",
     "event-pages/index": "./src/event-pages/index.ts",
     "popup/index": "./src/popup/index.ts",
   },

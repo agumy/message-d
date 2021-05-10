@@ -7,7 +7,7 @@
   "content_scripts": [
     {
       "matches": ["http://*/*", "https://*/*"],
-      "js": ["./content-scripts/index.js"],
+      "js": ["./content-scripts/index.js", "./content-scripts/api-mode.js"],
       "css": ["./content-scripts/index.css"]
     }
   ],
