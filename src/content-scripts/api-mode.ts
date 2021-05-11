@@ -1,7 +1,20 @@
 import { unescapeHTML } from "../utils/unescapeHTML";
 import { getAllTextNodeConsideringSelector } from "./getAllTextNode";
 
-const getTranslated = async (values: string[]) => {
+type TranslationTarget = {
+  node: Element;
+  isTranslated: boolean;
+};
+
+const toTranslationTarget = (nodes: Element[]) =>
+  nodes
+    .filter((element) => element.textContent?.trim())
+    .map((e) => ({
+      isTranslated: false,
+      node: e,
+    }));
+
+const fetchTranslation = async (values: string[]) => {
   const queries = new URLSearchParams();
   for (const value of values) {
     queries.append("q", value);
@@ -27,8 +40,55 @@ const createLoadingElement = (): HTMLDivElement => {
   return loading;
 };
 
+const translateInViewport = async (allNodes: TranslationTarget[]) => {
+  const targets = allNodes.filter((t, i) => {
+    if (t.isTranslated) {
+      return false;
+    }
+
+    const rect = t.node.getBoundingClientRect();
+    if (rect.top >= 0 && rect.top <= window.innerHeight) {
+      allNodes[i]!.isTranslated = true;
+      return true;
+    }
+
+    return false;
+  });
+
+  if (targets.length) {
+    const loading = createLoadingElement();
+    if (!document.querySelector("#message-d__loader-id")) {
+      document.body.appendChild(loading);
+    }
+
+    const translateds = await fetchTranslation(
+      targets.map((t) => t.node.innerHTML.replaceAll(/\. /g, "$&\n"))
+    );
+
+    for (let i = 0; i < targets.length; i++) {
+      const target = targets[i];
+      if (target) {
+        target.node.innerHTML = `${unescapeHTML(translateds[i])}`;
+      }
+    }
+
+    loading.remove();
+  }
+
+  setTimeout(() => translateInViewport(allNodes), 2000);
+};
+
 const translateStreamly = async (event: KeyboardEvent): Promise<void> => {
-  if (event.key !== "q" || !event.ctrlKey) {
+  if ((event.key !== "Q" && event.key !== "q") || !event.ctrlKey) {
+    return;
+  }
+  console.log(event);
+  if (event.shiftKey) {
+    console.log("test");
+    const allTargets = await getAllTextNodeConsideringSelector(document.body);
+    const allNodes = toTranslationTarget(allTargets);
+
+    translateInViewport(allNodes);
     return;
   }
 
@@ -58,52 +118,9 @@ const translateStreamly = async (event: KeyboardEvent): Promise<void> => {
     target?.classList.remove("message-d__translator");
 
     const allTargets = await getAllTextNodeConsideringSelector(currentTarget);
-    const allNodes = allTargets
-      .filter((element) => element.textContent?.trim())
-      .map((e) => ({
-        isTranslated: false,
-        node: e,
-      }));
+    const allNodes = toTranslationTarget(allTargets);
 
-    const translateInViewport = async () => {
-      const targets = allNodes.filter((t, i) => {
-        if (t.isTranslated) {
-          return false;
-        }
-
-        const rect = t.node.getBoundingClientRect();
-        if (rect.top >= 0 && rect.top <= window.innerHeight) {
-          allNodes[i]!.isTranslated = true;
-          return true;
-        }
-
-        return false;
-      });
-
-      if (targets.length) {
-        const loading = createLoadingElement();
-        if (!document.querySelector("#message-d__loader-id")) {
-          document.body.appendChild(loading);
-        }
-
-        const translateds = await getTranslated(
-          targets.map((t) => t.node.innerHTML.replaceAll(/\. /g, "$&\n"))
-        );
-
-        for (let i = 0; i < targets.length; i++) {
-          const target = targets[i];
-          if (target) {
-            target.node.innerHTML = `${unescapeHTML(translateds[i])}`;
-          }
-        }
-
-        loading.remove();
-      }
-
-      setTimeout(translateInViewport, 2000);
-    };
-
-    translateInViewport();
+    translateInViewport(allNodes);
   };
 
   const cancel = (event: KeyboardEvent): void => {
