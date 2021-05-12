@@ -1,6 +1,7 @@
 import { browser } from "webextension-polyfill-ts";
 import { Complete, Request } from "../Messages";
 import { sha256 } from "../utils/sha256";
+import { get as getMode } from "../utils/storage/mode";
 import { unescapeHTML } from "../utils/unescapeHTML";
 import { waitAsync } from "../utils/waitAsync";
 import { getAllTextNodeConsideringSelector } from "./getAllTextNode";
@@ -32,6 +33,11 @@ const createLoadingElement = (): HTMLDivElement => {
 
 const selectTranslationTarget = async (event: KeyboardEvent): Promise<void> => {
   if (event.key !== "c" || !event.ctrlKey) {
+    return;
+  }
+
+  const mode = await getMode();
+  if (mode !== "browser") {
     return;
   }
 
@@ -112,6 +118,11 @@ const selectTranslationTarget = async (event: KeyboardEvent): Promise<void> => {
 
 const translateStreamly = async (event: KeyboardEvent): Promise<void> => {
   if (event.key !== "p" || !event.ctrlKey) {
+    return;
+  }
+
+  const mode = await getMode();
+  if (mode !== "browser") {
     return;
   }
 

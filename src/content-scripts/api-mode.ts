@@ -1,3 +1,4 @@
+import { get as getMode } from "../utils/storage/mode";
 import { unescapeHTML } from "../utils/unescapeHTML";
 import { getAllTextNodeConsideringSelector } from "./getAllTextNode";
 
@@ -83,9 +84,13 @@ const translateStreamly = async (event: KeyboardEvent): Promise<void> => {
   if ((event.key !== "Q" && event.key !== "q") || !event.ctrlKey) {
     return;
   }
-  console.log(event);
+
+  const mode = await getMode();
+  if (mode !== "api") {
+    return;
+  }
+
   if (event.shiftKey) {
-    console.log("test");
     const allTargets = await getAllTextNodeConsideringSelector(document.body);
     const allNodes = toTranslationTarget(allTargets);
 
