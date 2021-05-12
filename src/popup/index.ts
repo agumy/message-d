@@ -1,4 +1,4 @@
-import { setToStorage } from "../utils/storage";
+import { setToStorage } from "../utils/storage/selector";
 import { buildIgnoreList } from "./ignoreList";
 
 const ignore = async (e: Event) => {

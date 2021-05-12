@@ -1,4 +1,4 @@
-import { getSelectorStorage } from "../utils/storage";
+import { getSelectorStorage } from "../utils/storage/selector";
 
 const htmlTagsNoTranslate = [
   "TITLE",
