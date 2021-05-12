@@ -117,7 +117,7 @@ const selectTranslationTarget = async (event: KeyboardEvent): Promise<void> => {
 };
 
 const translateStreamly = async (event: KeyboardEvent): Promise<void> => {
-  if (event.key !== "p" || !event.ctrlKey) {
+  if (event.key !== "q" || !event.ctrlKey) {
     return;
   }
 
@@ -213,7 +213,7 @@ const translateStreamly = async (event: KeyboardEvent): Promise<void> => {
   };
 
   const cancel = (event: KeyboardEvent): void => {
-    if (event.key === "Escape" || (event.key === "p" && event.ctrlKey)) {
+    if (event.key === "Escape" || (event.key === "q" && event.ctrlKey)) {
       document.removeEventListener("mousemove", mousemove);
       document.removeEventListener("click", click, true);
       document.removeEventListener("keydown", cancel);
