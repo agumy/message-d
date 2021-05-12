@@ -47,7 +47,8 @@ const translateInViewport = async (allNodes: TranslationTarget[]) => {
     }
 
     const rect = t.node.getBoundingClientRect();
-    if (rect.top >= 0 && rect.top <= window.innerHeight) {
+    // Add a margin of 500px for anticipation.
+    if (rect.top >= 0 && rect.top <= window.innerHeight + 500) {
       allNodes[i]!.isTranslated = true;
       return true;
     }
