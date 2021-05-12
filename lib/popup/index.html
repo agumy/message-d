@@ -11,11 +11,23 @@
     <div class="root">
       <h1>MessageD Translation Setting</h1>
       <div class="settings">
-        <form class="form">
-          <input class="selector" type="text" placeholder="selector" />
-          <button class="btn-ignore">Ignore</button>
-        </form>
-        <ul class="ignore-list"></ul>
+        <div class="settings-ignore">
+          <form class="form">
+            <input class="selector" type="text" placeholder="selector" />
+            <button class="btn-ignore">Ignore</button>
+          </form>
+          <ul class="ignore-list"></ul>
+        </div>
+        <div class="settings-mode">
+          <label>
+            <input type="radio" name="mode" value="browser" />
+            <span>Browser</span>
+          </label>
+          <label>
+            <input type="radio" name="mode" value="api" />
+            <span>API</span>
+          </label>
+        </div>
       </div>
     </div>
     <script src="index.js"></script>

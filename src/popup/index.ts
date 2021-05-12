@@ -1,5 +1,6 @@
 import { setToStorage } from "../utils/storage/selector";
 import { buildIgnoreList } from "./ignoreList";
+import { checkForRadio } from "./mode";
 
 const ignore = async (e: Event) => {
   e.preventDefault();
@@ -20,5 +21,6 @@ const ignore = async (e: Event) => {
   const form = document.querySelector(".form")!;
   form.addEventListener("submit", ignore);
   buildIgnoreList();
+  checkForRadio();
   (document.querySelector(".selector") as HTMLInputElement).focus();
 })();

@@ -20,7 +20,21 @@
   display: flex;
   flex-direction: column;
   justify-content: center;
+  gap: 32px;
+}
+
+.settings-ignore {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
   gap: 16px;
+}
+
+.settings-mode {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  gap: 8px;
 }
 
 .ignore-list {
