@@ -58,6 +58,8 @@ export const getAllTextNodeConsideringSelector = async (
   target: Element = document.body
 ) => {
   const { selectors } = await getSelectorStorage();
+  const joinedSelector = selectors.join(",");
+  const ignoredElements = Array.from(target.querySelectorAll(joinedSelector));
 
   const getAllTextNode = (target: Element): Element[] => {
     const shouldPush = hasChildOnlyTextNodeRecursive(target);
@@ -68,9 +70,7 @@ export const getAllTextNodeConsideringSelector = async (
         if (
           node.nodeType === 1 &&
           !htmlTagsNoTranslate.includes(node.nodeName.toUpperCase()) &&
-          !Array.from((node as Element).classList).some((c) =>
-            selectors.includes(c)
-          )
+          !ignoredElements.some((e) => e.isEqualNode(node))
         ) {
           getAllTextNode(node as Element);
         }
