@@ -80,6 +80,77 @@ const translateInViewport = async (allNodes: TranslationTarget[]) => {
   setTimeout(() => translateInViewport(allNodes), 2000);
 };
 
+const selectTranslationTarget = async (event: KeyboardEvent): Promise<void> => {
+  if (event.key !== "c" || !event.ctrlKey) {
+    return;
+  }
+
+  const mode = await getMode();
+  if (mode !== "api") {
+    return;
+  }
+
+  let target: null | Element = null;
+
+  const mousemove = (e: MouseEvent): void => {
+    let x = e.clientX;
+    let y = e.clientY;
+    const newTarget = document.elementFromPoint(x, y);
+    if (!target?.isEqualNode(newTarget)) {
+      target?.classList.remove("message-d__translator");
+      newTarget?.classList.add("message-d__translator");
+      target = newTarget;
+    }
+  };
+
+  const click = async (e: MouseEvent): Promise<void> => {
+    e.stopImmediatePropagation();
+    e.stopPropagation();
+    e.preventDefault();
+
+    const currentTarget = document.elementFromPoint(e.clientX, e.clientY);
+
+    if (!currentTarget) {
+      return;
+    }
+
+    target?.classList.remove("message-d__translator");
+
+    const loading = createLoadingElement();
+    if (!document.querySelector("#message-d__loader-id")) {
+      document.body.appendChild(loading);
+    }
+
+    const translationTarget = currentTarget.innerHTML;
+    const lineBreaked = translationTarget.replaceAll(/\. /g, "$&\n");
+    const translateds = await fetchTranslation([lineBreaked]);
+    if (translateds[0]) {
+      currentTarget.innerHTML = `${unescapeHTML(translateds[0])}`;
+    }
+
+    loading.remove();
+  };
+
+  const cancel = (event: KeyboardEvent): void => {
+    if (event.key === "Escape" || (event.key === "c" && event.ctrlKey)) {
+      document.removeEventListener("mousemove", mousemove);
+      document.removeEventListener("click", click, true);
+      document.removeEventListener("keydown", cancel);
+      document.addEventListener("keydown", selectTranslationTarget);
+
+      const targets = document.querySelectorAll(".message-d__translator");
+      targets.forEach((t) => {
+        t.classList.remove("message-d__translator");
+      });
+    }
+  };
+
+  document.addEventListener("mousemove", mousemove);
+  document.addEventListener("click", click, true);
+  document.addEventListener("keydown", cancel);
+  document.removeEventListener("keydown", selectTranslationTarget);
+};
+
 const translateStreamly = async (event: KeyboardEvent): Promise<void> => {
   if ((event.key !== "Q" && event.key !== "q") || !event.ctrlKey) {
     return;
@@ -151,4 +222,5 @@ const translateStreamly = async (event: KeyboardEvent): Promise<void> => {
 
 (async function initialize() {
   document.addEventListener("keydown", translateStreamly);
+  document.addEventListener("keydown", selectTranslationTarget);
 })();
