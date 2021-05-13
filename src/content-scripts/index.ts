@@ -1,6 +1,8 @@
 import { browser } from "webextension-polyfill-ts";
 import { Complete, Request } from "../Messages";
 import { createLoadingElement } from "../utils/createLoadingElement";
+import { getBoundingClientRectFlexibly } from "../utils/getBoundingClientRectFlexibly";
+import { getInnerHTMLFlexibly } from "../utils/getInnerHTMLFlexibly";
 import { sha256 } from "../utils/sha256";
 import { get as getMode } from "../utils/storage/mode";
 import { unescapeHTML } from "../utils/unescapeHTML";
@@ -10,12 +12,12 @@ import { getAllTextNodeConsideringSelector } from "./getAllTextNode";
 type Translation = {
   original: string;
   translationKey: string;
-  dom: Element;
+  dom: Node | Element;
 };
 
 type Cache = {
-  innerHTML: string;
-  dom: Element;
+  content: string;
+  dom: Node | Element;
 };
 
 let watingTranslation: Translation[] = [];
@@ -158,7 +160,7 @@ const translateStreamly = async (event: KeyboardEvent): Promise<void> => {
           return false;
         }
 
-        const rect = t.node.getBoundingClientRect();
+        const rect = getBoundingClientRectFlexibly(t.node);
         if (rect.top >= 0 && rect.top <= window.innerHeight) {
           allNodes[i]!.isTranslated = true;
           return true;
@@ -173,7 +175,7 @@ const translateStreamly = async (event: KeyboardEvent): Promise<void> => {
       }
 
       for (const target of targets) {
-        const translationTarget = target.node.innerHTML;
+        const translationTarget = getInnerHTMLFlexibly(target.node);
         const lineBreaked = translationTarget.replaceAll(/\. /g, "$&\n");
 
         const key = await sha256(lineBreaked);
@@ -246,10 +248,14 @@ browser.runtime.onMessage.addListener((message: Complete) => {
     cacheForRedo = [];
     cacheForUndo.push({
       dom: target.dom,
-      innerHTML: target.dom.innerHTML,
+      content: getInnerHTMLFlexibly(target.dom),
     });
-    target.dom.setAttribute("title", target.dom.textContent ?? "");
-    target.dom.innerHTML = `${unescapeHTML(message.value)}`;
+
+    if (target.dom instanceof Element) {
+      target.dom.innerHTML = `${unescapeHTML(message.value)}`;
+    } else {
+      target.dom.textContent = `${unescapeHTML(message.value)}`;
+    }
   }
 
   watingTranslation = watingTranslation.filter(
@@ -271,9 +277,14 @@ const undo = (event: KeyboardEvent): void => {
     if (cache) {
       cacheForRedo.push({
         ...cache,
-        innerHTML: cache.dom.innerHTML,
+        content: getInnerHTMLFlexibly(cache.dom),
       });
-      cache.dom.innerHTML = cache.innerHTML;
+
+      if (cache.dom instanceof Element) {
+        cache.dom.innerHTML = `${unescapeHTML(cache.content)}`;
+      } else {
+        cache.dom.textContent = `${unescapeHTML(cache.content)}`;
+      }
     }
   }
 };
@@ -284,9 +295,14 @@ const redo = (event: KeyboardEvent): void => {
     if (cache) {
       cacheForUndo.push({
         ...cache,
-        innerHTML: cache.dom.innerHTML,
+        content: getInnerHTMLFlexibly(cache.dom),
       });
-      cache.dom.innerHTML = cache.innerHTML;
+
+      if (cache.dom instanceof Element) {
+        cache.dom.innerHTML = `${unescapeHTML(cache.content)}`;
+      } else {
+        cache.dom.textContent = `${unescapeHTML(cache.content)}`;
+      }
     }
   }
 };
