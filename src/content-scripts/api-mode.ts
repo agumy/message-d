@@ -1,14 +1,16 @@
 import { createLoadingElement } from "../utils/createLoadingElement";
+import { getBoundingClientRectFlexibly } from "../utils/getBoundingClientRectFlexibly";
+import { getInnerHTMLFlexibly } from "../utils/getInnerHTMLFlexibly";
 import { get as getMode } from "../utils/storage/mode";
 import { unescapeHTML } from "../utils/unescapeHTML";
 import { getAllTextNodeConsideringSelector } from "./getAllTextNode";
 
 type TranslationTarget = {
-  node: Element;
+  node: Element | Node;
   isTranslated: boolean;
 };
 
-const toTranslationTarget = (nodes: Element[]) =>
+const toTranslationTarget = (nodes: Node[]): TranslationTarget[] =>
   nodes
     .filter((element) => element.textContent?.trim())
     .map((e) => ({
@@ -40,7 +42,7 @@ const translateInViewport = async (allNodes: TranslationTarget[]) => {
       return false;
     }
 
-    const rect = t.node.getBoundingClientRect();
+    const rect = getBoundingClientRectFlexibly(t.node);
     // Add a margin of 500px for anticipation.
     if (rect.top >= 0 && rect.top <= window.innerHeight + 500) {
       allNodes[i]!.isTranslated = true;
@@ -57,20 +59,26 @@ const translateInViewport = async (allNodes: TranslationTarget[]) => {
     }
 
     const translateds = await fetchTranslation(
-      targets.map((t) => t.node.innerHTML.replaceAll(/\. /g, "$&\n"))
+      targets.map((t) =>
+        getInnerHTMLFlexibly(t.node).replaceAll(/\. /g, "$&\n")
+      )
     );
 
     for (let i = 0; i < targets.length; i++) {
       const target = targets[i];
       if (target) {
-        target.node.innerHTML = `${unescapeHTML(translateds[i])}`;
+        if (target.node instanceof Element) {
+          target.node.innerHTML = `${unescapeHTML(translateds[i])}`;
+        } else {
+          target.node.textContent = `${unescapeHTML(translateds[i])}`;
+        }
       }
     }
 
     loading.remove();
   }
 
-  setTimeout(() => translateInViewport(allNodes), 2000);
+  setTimeout(() => translateInViewport(allNodes), 1000);
 };
 
 const selectTranslationTarget = async (event: KeyboardEvent): Promise<void> => {
