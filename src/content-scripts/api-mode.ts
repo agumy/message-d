@@ -1,3 +1,4 @@
+import { createLoadingElement } from "../utils/createLoadingElement";
 import { get as getMode } from "../utils/storage/mode";
 import { unescapeHTML } from "../utils/unescapeHTML";
 import { getAllTextNodeConsideringSelector } from "./getAllTextNode";
@@ -31,14 +32,6 @@ const fetchTranslation = async (values: string[]) => {
   });
 
   return await res.json();
-};
-
-const createLoadingElement = (): HTMLDivElement => {
-  const loading = document.createElement("div");
-  loading.classList.add("message-d__loader");
-  loading.id = "message-d__loader-id";
-
-  return loading;
 };
 
 const translateInViewport = async (allNodes: TranslationTarget[]) => {

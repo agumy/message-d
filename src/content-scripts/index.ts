@@ -1,5 +1,6 @@
 import { browser } from "webextension-polyfill-ts";
 import { Complete, Request } from "../Messages";
+import { createLoadingElement } from "../utils/createLoadingElement";
 import { sha256 } from "../utils/sha256";
 import { get as getMode } from "../utils/storage/mode";
 import { unescapeHTML } from "../utils/unescapeHTML";
@@ -22,14 +23,6 @@ const cacheForUndo: Cache[] = [];
 let cacheForRedo: Cache[] = [];
 
 let isDoing: boolean = false;
-
-const createLoadingElement = (): HTMLDivElement => {
-  const loading = document.createElement("div");
-  loading.classList.add("message-d__loader");
-  loading.id = "message-d__loader-id";
-
-  return loading;
-};
 
 const selectTranslationTarget = async (event: KeyboardEvent): Promise<void> => {
   if (event.key !== "c" || !event.ctrlKey) {
