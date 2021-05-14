@@ -3,10 +3,13 @@ import { browser } from "webextension-polyfill-ts";
 export type Mode = "api" | "browser";
 
 export const get = async (): Promise<Mode> => {
-  const { mode } =
-    ((await browser.storage.sync.get("mode")) as {
-      mode: Mode;
-    }) ?? ({ mode: "browser" } as const);
+  const { mode } = (await browser.storage.sync.get("mode")) as {
+    mode: Mode | "";
+  };
+
+  if (!mode) {
+    return "browser";
+  }
 
   return mode;
 };
