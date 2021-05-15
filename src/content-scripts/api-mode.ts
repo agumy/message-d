@@ -1,6 +1,11 @@
 import { createLoadingElement } from "../utils/createLoadingElement";
+import { generateElementFromString } from "../utils/generateElementFromString";
+import { getAllAtrributeRecursively } from "../utils/getAllAttributeRecursively";
 import { getBoundingClientRectFlexibly } from "../utils/getBoundingClientRectFlexibly";
 import { getInnerHTMLFlexibly } from "../utils/getInnerHTMLFlexibly";
+import { removeAllAttributesRecursively } from "../utils/removeAllAttributesRecursively";
+import { restoreAttributesRecursively } from "../utils/restoreAttributesRecursively";
+import { sanitizeTranslatedHTML } from "../utils/sanitizeTranslatedHTML";
 import { get as getMode } from "../utils/storage/mode";
 import { unescapeHTML } from "../utils/unescapeHTML";
 import { getAllTextNodeConsideringSelector } from "./getAllTextNode";
@@ -122,11 +127,24 @@ const selectTranslationTarget = async (event: KeyboardEvent): Promise<void> => {
       document.body.appendChild(loading);
     }
 
-    const translationTarget = currentTarget.innerHTML;
+    const temp = generateElementFromString(currentTarget.innerHTML);
+    sanitizeTranslatedHTML(temp);
+
+    const attribute = getAllAtrributeRecursively(temp);
+    removeAllAttributesRecursively(temp);
+
+    const translationTarget = temp.innerHTML;
     const lineBreaked = translationTarget.replaceAll(/\. /g, "$&\n");
     const translateds = await fetchTranslation([lineBreaked]);
+    const escapedTranslated = unescapeHTML(translateds[0]);
+
+    const translatedHTML = generateElementFromString(escapedTranslated);
+    sanitizeTranslatedHTML(translatedHTML);
+
+    restoreAttributesRecursively(translatedHTML, attribute);
+
     if (translateds[0]) {
-      currentTarget.innerHTML = `${unescapeHTML(translateds[0])}`;
+      currentTarget.innerHTML = translatedHTML.innerHTML;
     }
 
     loading.remove();
