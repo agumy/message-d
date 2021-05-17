@@ -63,19 +63,35 @@ const translateInViewport = async (allNodes: TranslationTarget[]) => {
       document.body.appendChild(loading);
     }
 
-    const translateds = await fetchTranslation(
-      targets.map((t) =>
-        getInnerHTMLFlexibly(t.node).replaceAll(/\. /g, "$&\n")
-      )
+    const temps = targets.map((t) =>
+      generateElementFromString(getInnerHTMLFlexibly(t.node))
+    );
+
+    temps.forEach(sanitizeTranslatedHTML);
+
+    const attributes = temps.map(getAllAtrributeRecursively);
+    temps.forEach(removeAllAttributesRecursively);
+
+    const lineBreaked = temps.map((t) =>
+      t.innerHTML.replaceAll(/\. /g, "$&\n")
+    );
+
+    const translateds = (await fetchTranslation(lineBreaked)) as string[];
+    const escapedTranslateds = translateds.map(unescapeHTML);
+
+    const translatedHTMLs = escapedTranslateds.map(generateElementFromString);
+    translatedHTMLs.forEach(sanitizeTranslatedHTML);
+    translatedHTMLs.forEach((t, i) =>
+      restoreAttributesRecursively(t, attributes[i]!)
     );
 
     for (let i = 0; i < targets.length; i++) {
       const target = targets[i];
       if (target) {
         if (target.node instanceof Element) {
-          target.node.innerHTML = `${unescapeHTML(translateds[i])}`;
+          target.node.innerHTML = translatedHTMLs[i]!.innerHTML;
         } else {
-          target.node.textContent = `${unescapeHTML(translateds[i])}`;
+          target.node.textContent = translatedHTMLs[i]!.innerHTML;
         }
       }
     }
