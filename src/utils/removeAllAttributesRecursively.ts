@@ -1,13 +1,25 @@
 export const removeAllAttributesRecursively = (node: Node) => {
-  if (node instanceof Element) {
-    while (node.hasAttributes()) {
-      for (const attr of Array.from(node.attributes)) {
-        node.removeAttribute(attr.name);
+  let i = 0;
+
+  const removeAllAttributes = (node: Node) => {
+    if (node instanceof Element) {
+      let hasAttribute = node.hasAttributes();
+
+      while (node.hasAttributes()) {
+        for (const attr of Array.from(node.attributes)) {
+          node.removeAttribute(attr.name);
+        }
+      }
+
+      if (hasAttribute) {
+        node.setAttribute("i", String(i++));
+      }
+
+      for (const child of Array.from(node.children)) {
+        removeAllAttributes(child);
       }
     }
+  };
 
-    for (const child of Array.from(node.children)) {
-      removeAllAttributesRecursively(child);
-    }
-  }
+  removeAllAttributes(node);
 };

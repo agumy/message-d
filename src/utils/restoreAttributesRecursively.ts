@@ -1,22 +1,21 @@
 type AttributeNode = {
-  attribute: Record<string, string>;
-  children?: AttributeNode[];
+  [key: string]: string;
 };
 
 export const restoreAttributesRecursively = (
   node: Node,
-  attributeNode: AttributeNode
+  attributeNodes: AttributeNode[]
 ) => {
   if (node instanceof Element) {
-    for (const [key, val] of Object.entries(attributeNode.attribute)) {
-      node.setAttribute(key, val);
+    if (node.hasAttribute("i")) {
+      const i = Number(node.getAttribute("i"));
+      for (const [key, val] of Object.entries(attributeNodes[i]!)) {
+        node.setAttribute(key, val);
+      }
     }
 
-    for (let i = 0; i < node.childNodes.length; i++) {
-      restoreAttributesRecursively(
-        node.childNodes[i]!,
-        attributeNode.children![i]!
-      );
+    for (const child of Array.from(node.childNodes)) {
+      restoreAttributesRecursively(child, attributeNodes);
     }
   }
 };

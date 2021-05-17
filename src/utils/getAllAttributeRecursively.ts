@@ -1,35 +1,28 @@
-type AttributeNode = {
-  attribute: Record<string, string>;
-  children?: AttributeNode[];
+type Attribute = {
+  [key: string]: string;
 };
 
-export const getAllAtrributeRecursively = (node: Node) => {
-  const attributes: AttributeNode = {
-    attribute: {},
-  };
+export const getAllAtrributeRecursively = (node: Node): Attribute[] => {
+  const attributes: Attribute[] = [];
 
-  const getAllAttr = (node: Node, attributeNode: AttributeNode) => {
+  const getAllAttr = (node: Node) => {
     if (node instanceof Element) {
-      for (const attr of Array.from(node.attributes)) {
-        attributeNode.attribute[attr.name] = attr.value;
+      if (node.hasAttributes()) {
+        const attributeMap = Array.from(node.attributes).reduce(
+          (prev, curr) => ({ ...prev, [curr.name]: curr.value }),
+          {}
+        );
+
+        attributes.push(attributeMap);
       }
 
-      if (node.childNodes.length) {
-        attributeNode.children = [];
-        for (const n of Array.from(node.childNodes)) {
-          attributeNode.children.push({
-            attribute: {},
-          });
-          getAllAttr(
-            n,
-            attributeNode.children[attributeNode.children.length - 1]!
-          );
-        }
+      for (const n of Array.from(node.childNodes)) {
+        getAllAttr(n);
       }
     }
   };
 
-  getAllAttr(node, attributes);
+  getAllAttr(node);
 
   return attributes;
 };
