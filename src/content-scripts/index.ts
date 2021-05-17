@@ -1,8 +1,13 @@
 import { browser } from "webextension-polyfill-ts";
 import { Complete, Request } from "../Messages";
 import { createLoadingElement } from "../utils/createLoadingElement";
+import { generateElementFromString } from "../utils/generateElementFromString";
+import { getAllAtrributeRecursively } from "../utils/getAllAttributeRecursively";
 import { getBoundingClientRectFlexibly } from "../utils/getBoundingClientRectFlexibly";
 import { getInnerHTMLFlexibly } from "../utils/getInnerHTMLFlexibly";
+import { removeAllAttributesRecursively } from "../utils/removeAllAttributesRecursively";
+import { restoreAttributesRecursively } from "../utils/restoreAttributesRecursively";
+import { sanitizeTranslatedHTML } from "../utils/sanitizeTranslatedHTML";
 import { sha256 } from "../utils/sha256";
 import { get as getMode } from "../utils/storage/mode";
 import { unescapeHTML } from "../utils/unescapeHTML";
@@ -13,6 +18,7 @@ type Translation = {
   original: string;
   translationKey: string;
   dom: Node | Element;
+  attribute: { [key: string]: string }[];
 };
 
 type Cache = {
@@ -67,7 +73,13 @@ const selectTranslationTarget = async (event: KeyboardEvent): Promise<void> => {
       document.body.appendChild(loading);
     }
 
-    const translationTarget = currentTarget.innerHTML;
+    const temp = generateElementFromString(currentTarget.innerHTML);
+    sanitizeTranslatedHTML(temp);
+
+    const attribute = getAllAtrributeRecursively(temp);
+    removeAllAttributesRecursively(temp);
+
+    const translationTarget = temp.innerHTML;
     const lineBreaked = translationTarget.replaceAll(/\. /g, "$&\n");
 
     const key = await sha256(lineBreaked);
@@ -75,6 +87,7 @@ const selectTranslationTarget = async (event: KeyboardEvent): Promise<void> => {
       original: lineBreaked,
       translationKey: key,
       dom: currentTarget,
+      attribute,
     });
 
     waitAsync(
@@ -176,13 +189,25 @@ const translateStreamly = async (event: KeyboardEvent): Promise<void> => {
 
       for (const target of targets) {
         const translationTarget = getInnerHTMLFlexibly(target.node);
-        const lineBreaked = translationTarget.replaceAll(/\. /g, "$&\n");
 
+      const temps = targets.map((t) =>
+        generateElementFromString(getInnerHTMLFlexibly(t.node))
+      );
+
+      temps.forEach(sanitizeTranslatedHTML);
+
+      const attributes = temps.map(getAllAtrributeRecursively);
+      temps.forEach(removeAllAttributesRecursively);
+
+      for (const [index, target] of Object.entries(temps)) {
+        const translationTarget = getInnerHTMLFlexibly(target);
+        const lineBreaked = translationTarget.replaceAll(/\. /g, "$&\n");
         const key = await sha256(lineBreaked);
         watingTranslation.push({
           original: lineBreaked,
           translationKey: key,
-          dom: target.node,
+          dom: targets[Number(index)]!.node,
+          attribute: attributes[Number(index)]!,
         });
 
         waitAsync(
@@ -251,10 +276,17 @@ browser.runtime.onMessage.addListener((message: Complete) => {
       content: getInnerHTMLFlexibly(target.dom),
     });
 
+    const escapedTranslated = unescapeHTML(message.value);
+    const translatedHTML = generateElementFromString(escapedTranslated);
+
+    sanitizeTranslatedHTML(translatedHTML);
+
+    restoreAttributesRecursively(translatedHTML, target.attribute);
+
     if (target.dom instanceof Element) {
-      target.dom.innerHTML = `${unescapeHTML(message.value)}`;
+      target.dom.innerHTML = translatedHTML.innerHTML;
     } else {
-      target.dom.textContent = `${unescapeHTML(message.value)}`;
+      target.dom.textContent = translatedHTML.textContent;
     }
   }
 
