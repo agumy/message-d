@@ -11,14 +11,16 @@ const htmlTagsNoTranslate = [
 ];
 const htmlTagsInlineIgnore = ["BR", "KBD", "WBR"];
 
-const hasChildOnlyTextNode = (node: Node) =>
-  Boolean(node.childNodes.length) &&
-  Array.from(node.childNodes).every((node) => node.nodeType === 3);
+const hasChildOnlyTextNode = (node: Node): boolean => {
+  if (node.childNodes.length) {
+    return Array.from(node.childNodes).every(
+      (node) => node.nodeType === 3 || hasChildOnlyTextNode(node)
+    );
+  }
+  return false;
+};
 
-const hasChildOnlyTextNodeRecursive = (
-  node: Node,
-  deps: number = 0
-): boolean => {
+const hasChildOnlyTextNodeRecursive = (node: Node): boolean => {
   if (node.nodeType === 3 && (node.textContent ?? "").trim().length > 0) {
     return true;
   }
@@ -38,16 +40,14 @@ const hasChildOnlyTextNodeRecursive = (
     return true;
   }
 
-  return Array.from(node.childNodes).every((node) =>
-    hasChildOnlyTextNodeRecursive(node, deps + 1)
-  );
+  return false;
 };
 
 export const getAllTextNodeConsideringSelector = async (
   target: Element = document.body
 ) => {
   const elements: (Node | Element)[] = [];
-  // console.log(target);
+
   const { selectors } = await getSelectorStorage();
   const joinedSelector = selectors.join(",");
   const ignoredElements = Array.from(target.querySelectorAll(joinedSelector));
