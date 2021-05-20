@@ -28,6 +28,7 @@ const fetchTranslation = async (values: string[]) => {
   for (const value of values) {
     queries.append("q", value);
   }
+
   const res = await fetch("http://localhost:8080/translation", {
     method: "POST",
     headers: {
@@ -38,7 +39,7 @@ const fetchTranslation = async (values: string[]) => {
     mode: "cors",
   });
 
-  return await res.json();
+  return (await res.json()) as string[] | [string];
 };
 
 const translateInViewport = async (allNodes: TranslationTarget[]) => {
