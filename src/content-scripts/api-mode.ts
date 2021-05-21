@@ -42,7 +42,7 @@ const fetchTranslation = async (values: string[]) => {
   return (await res.json()) as string[] | [string];
 };
 
-const translateInViewport = async (allNodes: TranslationTarget[]) => {
+const translateInViewport = (allNodes: TranslationTarget[]) => {
   const targets = allNodes.filter((t, i) => {
     if (t.isTranslated) {
       return false;
@@ -59,45 +59,34 @@ const translateInViewport = async (allNodes: TranslationTarget[]) => {
   });
 
   if (targets.length) {
-    const loading = createLoadingElement();
-    if (!document.querySelector("#message-d__loader-id")) {
-      document.body.appendChild(loading);
-    }
+    for (const t of targets) {
+      const temp = generateElementFromString(getInnerHTMLFlexibly(t.node));
+      sanitizeTranslatedHTML(temp);
+      const attribute = getAllAtrributeRecursively(temp);
+      removeAllAttributesRecursively(temp);
 
-    const temps = targets.map((t) =>
-      generateElementFromString(getInnerHTMLFlexibly(t.node))
-    );
+      const lineBreaked = temp.innerHTML.replaceAll(/\. /g, "$&\n");
 
-    temps.forEach(sanitizeTranslatedHTML);
-
-    const attributes = temps.map(getAllAtrributeRecursively);
-    temps.forEach(removeAllAttributesRecursively);
-
-    const lineBreaked = temps.map((t) =>
-      t.innerHTML.replaceAll(/\. /g, "$&\n")
-    );
-
-    const translateds = (await fetchTranslation(lineBreaked)) as string[];
-    const escapedTranslateds = translateds.map(unescapeHTML);
-
-    const translatedHTMLs = escapedTranslateds.map(generateElementFromString);
-    translatedHTMLs.forEach(sanitizeTranslatedHTML);
-    translatedHTMLs.forEach((t, i) =>
-      restoreAttributesRecursively(t, attributes[i]!)
-    );
-
-    for (let i = 0; i < targets.length; i++) {
-      const target = targets[i];
-      if (target) {
-        if (target.node instanceof Element) {
-          target.node.innerHTML = translatedHTMLs[i]!.innerHTML;
-        } else {
-          target.node.textContent = translatedHTMLs[i]!.innerHTML;
-        }
+      const loading = createLoadingElement();
+      if (!document.querySelector("#message-d__loader-id")) {
+        document.body.appendChild(loading);
       }
-    }
+      fetchTranslation([lineBreaked]).then((translated) => {
+        const escaped = unescapeHTML(translated[0]);
 
-    loading.remove();
+        const translatedHTML = generateElementFromString(escaped);
+        sanitizeTranslatedHTML(translatedHTML);
+        restoreAttributesRecursively(translatedHTML, attribute);
+
+        if (t.node instanceof Element) {
+          t.node.innerHTML = translatedHTML.innerHTML;
+        } else {
+          t.node.textContent = translatedHTML.innerHTML;
+        }
+
+        loading.remove();
+      });
+    }
   }
 
   setTimeout(() => translateInViewport(allNodes), 1000);
