@@ -14,7 +14,10 @@ const htmlTagsInlineIgnore = ["BR", "KBD", "WBR"];
 const hasChildOnlyTextNode = (node: Node): boolean => {
   if (node.childNodes.length) {
     return Array.from(node.childNodes).every(
-      (node) => node.nodeType === 3 || hasChildOnlyTextNode(node)
+      (node) =>
+        node.nodeType === 3 ||
+        hasChildOnlyTextNode(node) ||
+        htmlTagsInlineIgnore.includes(node.nodeName.toUpperCase())
     );
   }
   return false;
@@ -22,10 +25,6 @@ const hasChildOnlyTextNode = (node: Node): boolean => {
 
 const hasChildOnlyTextNodeRecursive = (node: Node): boolean => {
   if (node.nodeType === 3 && (node.textContent ?? "").trim().length > 0) {
-    return true;
-  }
-
-  if (htmlTagsInlineIgnore.includes(node.nodeName.toUpperCase())) {
     return true;
   }
 
