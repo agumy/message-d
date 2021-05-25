@@ -9,8 +9,11 @@ export const restoreAttributesRecursively = (
   if (node instanceof Element) {
     if (node.hasAttribute("i")) {
       const i = Number(node.getAttribute("i"));
-      for (const [key, val] of Object.entries(attributeNodes[i]!)) {
-        node.setAttribute(key, val);
+      const attributeNode = attributeNodes[i];
+      if (attributeNode) {
+        for (const [key, val] of Object.entries(attributeNode)) {
+          node.setAttribute(key, val);
+        }
       }
     }
 
