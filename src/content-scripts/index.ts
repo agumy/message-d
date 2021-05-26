@@ -187,8 +187,6 @@ const translateStreamly = async (event: KeyboardEvent): Promise<void> => {
         document.body.appendChild(loading);
       }
 
-      console.log(targets.map((e) => e.node));
-
       const temps = targets.map((t) =>
         generateElementFromString(getInnerHTMLFlexibly(t.node))
       );
