@@ -3,7 +3,13 @@ export const removeAllAttributesRecursively = (node: Node) => {
 
   const removeAllAttributes = (node: Node) => {
     if (node instanceof Element) {
+      if (node.hasAttribute("class") && node.getAttribute("class") === "") {
+        node.removeAttribute("class");
+      }
+
       let hasAttribute = node.hasAttributes();
+      console.log(node);
+      console.log(hasAttribute);
 
       while (node.hasAttributes()) {
         for (const attr of Array.from(node.attributes)) {
