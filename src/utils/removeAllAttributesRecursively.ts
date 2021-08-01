@@ -8,8 +8,6 @@ export const removeAllAttributesRecursively = (node: Node) => {
       }
 
       let hasAttribute = node.hasAttributes();
-      console.log(node);
-      console.log(hasAttribute);
 
       while (node.hasAttributes()) {
         for (const attr of Array.from(node.attributes)) {
