@@ -252,8 +252,6 @@ const translateStreamly = async (event: KeyboardEvent): Promise<void> => {
 (async function initialize() {
   document.addEventListener("keydown", selectTranslationTarget);
   document.addEventListener("keydown", translateStreamly);
-
-  console.info(`[message-d] completed loading scripts`);
 })();
 
 // listener for message from event page
