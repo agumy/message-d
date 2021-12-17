@@ -3,17 +3,26 @@
   opacity: 0.8;
 }
 
-.message-d__loader {
+.message-d__loading-wrapper {
   bottom: 16px;
   left: 16px;
+  position: fixed;
+  z-index: 2147483647;
+  background-color: rgba(255, 255, 255, 0.1);
+  height: 40px;
+  width: 40px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-radius: 4px;
+}
 
+.message-d__loader {
   margin: 12px 12px;
   font-size: 6px;
   width: 1em;
   height: 1em;
   border-radius: 50%;
-  position: fixed;
-  z-index: 2147483647;
   text-indent: -9999em;
   -webkit-animation: load5 1.1s infinite ease;
   animation: load5 1.1s infinite ease;
