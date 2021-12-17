@@ -15,6 +15,7 @@ export const restoreAttributesRecursively = (
           node.setAttribute(key, val);
         }
       }
+      node.removeAttribute("i");
     }
 
     for (const child of Array.from(node.childNodes)) {

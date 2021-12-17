@@ -8,7 +8,10 @@ import { restoreAttributesRecursively } from "../utils/restoreAttributesRecursiv
 import { sanitizeTranslatedHTML } from "../utils/sanitizeTranslatedHTML";
 import { get as getMode } from "../utils/storage/mode";
 import { unescapeHTML } from "../utils/unescapeHTML";
-import { getAllTextNodeConsideringSelector } from "./getAllTextNode";
+import {
+  getAllTextNode,
+  getAllTextNodeConsideringSelector,
+} from "./getAllTextNode";
 
 type TranslationTarget = {
   node: Element | Node;
@@ -16,12 +19,10 @@ type TranslationTarget = {
 };
 
 const toTranslationTarget = (nodes: Node[]): TranslationTarget[] =>
-  nodes
-    .filter((element) => element.textContent?.trim())
-    .map((e) => ({
-      isTranslated: false,
-      node: e,
-    }));
+  nodes.map((e) => ({
+    isTranslated: false,
+    node: e,
+  }));
 
 const fetchTranslation = async (values: string[]) => {
   const queries = new URLSearchParams();
@@ -39,7 +40,7 @@ const fetchTranslation = async (values: string[]) => {
     mode: "cors",
   });
 
-  return (await res.json()) as string[] | [string];
+  return (await res.json()) as string[];
 };
 
 const translateInViewport = (allNodes: TranslationTarget[]) => {
@@ -59,34 +60,66 @@ const translateInViewport = (allNodes: TranslationTarget[]) => {
   });
 
   if (targets.length) {
-    for (const t of targets) {
-      const temp = generateElementFromString(getInnerHTMLFlexibly(t.node));
+    // this is legacy logic
+    // for (const t of targets) {
+    // const temp = generateElementFromString(getInnerHTMLFlexibly(t.node));
+    // sanitizeTranslatedHTML(temp);
+    // const attribute = getAllAtrributeRecursively(temp);
+    // removeAllAttributesRecursively(temp);
+
+    //   const lineBreaked = temp.innerHTML.replaceAll(/\. /g, "$&\n");
+
+    //   const loading = createLoadingElement();
+    //   if (!document.querySelector("#message-d__loader-id")) {
+    //     document.body.appendChild(loading);
+    //   }
+    //   fetchTranslation([lineBreaked]).then((translated) => {
+    //     const escaped = unescapeHTML(translated[0]);
+
+    //     const translatedHTML = generateElementFromString(escaped);
+    //     sanitizeTranslatedHTML(translatedHTML);
+    //     restoreAttributesRecursively(translatedHTML, attribute);
+
+    //     if (t.node instanceof Element) {
+    //       t.node.innerHTML = translatedHTML.innerHTML;
+    //     } else {
+    //       t.node.textContent = translatedHTML.innerHTML;
+    //     }
+
+    //     loading.remove();
+    //   });
+    // }
+    const t = targets.map(({ node }) => {
+      const temp = generateElementFromString(getInnerHTMLFlexibly(node));
       sanitizeTranslatedHTML(temp);
-      const attribute = getAllAtrributeRecursively(temp);
       removeAllAttributesRecursively(temp);
-
       const lineBreaked = temp.innerHTML.replaceAll(/\. /g, "$&\n");
+      return {
+        texts: lineBreaked,
+        attributes: getAllAtrributeRecursively(temp),
+      };
+    });
 
-      const loading = createLoadingElement();
-      if (!document.querySelector("#message-d__loader-id")) {
-        document.body.appendChild(loading);
-      }
-      fetchTranslation([lineBreaked]).then((translated) => {
-        const escaped = unescapeHTML(translated[0]);
+    const loading = createLoadingElement();
+    if (!document.querySelector("#message-d__loader-id")) {
+      document.body.appendChild(loading);
+    }
+
+    fetchTranslation(t.map((e) => e.texts)).then((translated) => {
+      translated.forEach((translatedText, i) => {
+        const escaped = unescapeHTML(translatedText);
 
         const translatedHTML = generateElementFromString(escaped);
         sanitizeTranslatedHTML(translatedHTML);
-        restoreAttributesRecursively(translatedHTML, attribute);
-
-        if (t.node instanceof Element) {
-          t.node.innerHTML = translatedHTML.innerHTML;
-        } else {
-          t.node.textContent = translatedHTML.innerHTML;
+        restoreAttributesRecursively(translatedHTML, t[i]!.attributes);
+        const target = targets[i];
+        if (target && target.node instanceof Element) {
+          target.node.innerHTML = translatedHTML.innerHTML;
         }
-
-        loading.remove();
       });
-    }
+
+      loading.remove();
+    });
   }
 
   setTimeout(() => translateInViewport(allNodes), 1000);
@@ -141,15 +174,15 @@ const selectTranslationTarget = async (event: KeyboardEvent): Promise<void> => {
 
     const translationTarget = temp.innerHTML;
     const lineBreaked = translationTarget.replaceAll(/\. /g, "$&\n");
-    const translateds = await fetchTranslation([lineBreaked]);
-    const escapedTranslated = unescapeHTML(translateds[0]);
+    const [translated] = await fetchTranslation([lineBreaked]);
+    if (translated) {
+      const escapedTranslated = unescapeHTML(translated);
 
-    const translatedHTML = generateElementFromString(escapedTranslated);
-    sanitizeTranslatedHTML(translatedHTML);
+      const translatedHTML = generateElementFromString(escapedTranslated);
+      sanitizeTranslatedHTML(translatedHTML);
 
-    restoreAttributesRecursively(translatedHTML, attribute);
+      restoreAttributesRecursively(translatedHTML, attribute);
 
-    if (translateds[0]) {
       currentTarget.innerHTML = translatedHTML.innerHTML;
     }
 
@@ -219,7 +252,8 @@ const translateStreamly = async (event: KeyboardEvent): Promise<void> => {
 
     target?.classList.remove("message-d__translator");
 
-    const allTargets = await getAllTextNodeConsideringSelector(currentTarget);
+    // const allTargets = await getAllTextNodeConsideringSelector(currentTarget);
+    const allTargets = await getAllTextNode(currentTarget);
     const allNodes = toTranslationTarget(allTargets);
 
     translateInViewport(allNodes);
