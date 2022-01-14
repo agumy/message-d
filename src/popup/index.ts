@@ -1,4 +1,5 @@
 import { setToStorage } from "../utils/storage/selector";
+import { checkForKey } from "./api-key";
 import { buildIgnoreList } from "./ignoreList";
 import { checkForRadio } from "./mode";
 
@@ -22,5 +23,7 @@ const ignore = async (e: Event) => {
   form.addEventListener("submit", ignore);
   buildIgnoreList();
   checkForRadio();
+  checkForKey();
   (document.querySelector(".selector") as HTMLInputElement).focus();
+  (document.querySelector(".api-key") as HTMLInputElement).focus();
 })();
