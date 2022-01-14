@@ -7,6 +7,7 @@ import { removeAllAttributesRecursively } from "../utils/removeAllAttributesRecu
 import { restoreAttributesRecursively } from "../utils/restoreAttributesRecursively";
 import { sanitizeTranslatedHTML } from "../utils/sanitizeTranslatedHTML";
 import { get as getMode } from "../utils/storage/mode";
+import { get as getKey } from "../utils/storage/deepl-l-api-key";
 import { unescapeHTML } from "../utils/unescapeHTML";
 import {
   getAllTextNode,
@@ -24,11 +25,18 @@ const toTranslationTarget = (nodes: Node[]): TranslationTarget[] =>
     node: e,
   }));
 
+type TranslationResponse = {
+  translations: { detected_source_language: string; text: string }[];
+};
+
 const fetchTranslation = async (values: string[]) => {
   const queries = new URLSearchParams();
   for (const value of values) {
-    queries.append("q", value);
+    queries.append("text", value);
   }
+  const key = await getKey();
+  queries.append("auth_key", key);
+  queries.append("target_lang", "JA");
 
   const res = await fetch("http://localhost:8080/translation", {
     method: "POST",
@@ -38,9 +46,10 @@ const fetchTranslation = async (values: string[]) => {
     },
     body: queries,
     mode: "cors",
+    referrerPolicy: "no-referrer",
   });
-
-  return (await res.json()) as string[];
+  const result = (await res.json()) as TranslationResponse;
+  return result.translations.map((e) => e.text);
 };
 
 const translateInViewport = (allNodes: TranslationTarget[]) => {
@@ -89,7 +98,7 @@ const translateInViewport = (allNodes: TranslationTarget[]) => {
     //     loading.remove();
     //   });
     // }
-    const t = targets.map(({ node }) => {
+    const ts = targets.map(({ node }) => {
       const temp = generateElementFromString(getInnerHTMLFlexibly(node));
       sanitizeTranslatedHTML(temp);
       removeAllAttributesRecursively(temp);
@@ -100,26 +109,33 @@ const translateInViewport = (allNodes: TranslationTarget[]) => {
       };
     });
 
-    const loading = createLoadingElement();
-    if (!document.querySelector("#message-d__loader-id")) {
-      document.body.appendChild(loading);
-    }
+    for (let i = 0; i < ts.length; i++) {
+      const t = ts[i];
+      if (!t) {
+        return;
+      }
 
-    fetchTranslation(t.map((e) => e.texts)).then((translated) => {
-      translated.forEach((translatedText, i) => {
-        const escaped = unescapeHTML(translatedText);
+      const loading = createLoadingElement();
+      if (!document.querySelector("#message-d__loader-id")) {
+        document.body.appendChild(loading);
+      }
 
-        const translatedHTML = generateElementFromString(escaped);
-        sanitizeTranslatedHTML(translatedHTML);
-        restoreAttributesRecursively(translatedHTML, t[i]!.attributes);
-        const target = targets[i];
-        if (target && target.node instanceof Element) {
-          target.node.innerHTML = translatedHTML.innerHTML;
+      fetchTranslation([t.texts]).then((translated) => {
+        if (translated[0]) {
+          const escaped = unescapeHTML(translated[0]);
+
+          const translatedHTML = generateElementFromString(escaped);
+          sanitizeTranslatedHTML(translatedHTML);
+          restoreAttributesRecursively(translatedHTML, t.attributes);
+
+          const target = targets[i];
+          if (target && target.node instanceof Element) {
+            target.node.innerHTML = translatedHTML.innerHTML;
+          }
         }
+        loading.remove();
       });
-
-      loading.remove();
-    });
+    }
   }
 
   setTimeout(() => translateInViewport(allNodes), 1000);
@@ -131,6 +147,7 @@ const selectTranslationTarget = async (event: KeyboardEvent): Promise<void> => {
   }
 
   const mode = await getMode();
+
   if (mode !== "api") {
     return;
   }
