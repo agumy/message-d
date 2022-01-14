@@ -101,11 +101,12 @@ const translateInViewport = (allNodes: TranslationTarget[]) => {
     const ts = targets.map(({ node }) => {
       const temp = generateElementFromString(getInnerHTMLFlexibly(node));
       sanitizeTranslatedHTML(temp);
+      const attributes = getAllAtrributeRecursively(temp);
       removeAllAttributesRecursively(temp);
       const lineBreaked = temp.innerHTML.replaceAll(/\. /g, "$&\n");
       return {
         texts: lineBreaked,
-        attributes: getAllAtrributeRecursively(temp),
+        attributes,
       };
     });
 
