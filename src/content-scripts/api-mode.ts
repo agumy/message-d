@@ -112,33 +112,57 @@ const translateInViewport = (allNodes: TranslationTarget[]) => {
       };
     });
 
-    for (let i = 0; i < ts.length; i++) {
-      const t = ts[i];
-      if (!t) {
-        return;
-      }
+    // this is translated all(viewport) once
+    const loading = createLoadingElement();
+    if (!document.querySelector("#message-d__loader-id")) {
+      document.body.appendChild(loading);
+    }
 
-      const loading = createLoadingElement();
-      if (!document.querySelector("#message-d__loader-id")) {
-        document.body.appendChild(loading);
-      }
-
-      fetchTranslation([t.texts]).then((translated) => {
-        if (translated[0]) {
-          const escaped = unescapeHTML(translated[0]);
+    fetchTranslation(ts.map((e) => e.texts))
+      .then((translated) => {
+        translated.forEach((translatedText, i) => {
+          const escaped = unescapeHTML(translatedText);
 
           const translatedHTML = generateElementFromString(escaped);
           sanitizeTranslatedHTML(translatedHTML);
-          restoreAttributesRecursively(translatedHTML, t.attributes);
-
+          restoreAttributesRecursively(translatedHTML, ts[i]!.attributes);
           const target = targets[i];
           if (target && target.node instanceof Element) {
             target.node.innerHTML = translatedHTML.innerHTML;
           }
-        }
+        });
+      })
+      .finally(() => {
         loading.remove();
       });
-    }
+    // this is translated each one sentence
+    // for (let i = 0; i < ts.length; i++) {
+    //   const t = ts[i];
+    //   if (!t) {
+    //     return;
+    //   }
+
+    //   const loading = createLoadingElement();
+    //   if (!document.querySelector("#message-d__loader-id")) {
+    //     document.body.appendChild(loading);
+    //   }
+
+    //   fetchTranslation([t.texts]).then((translated) => {
+    //     if (translated[0]) {
+    //       const escaped = unescapeHTML(translated[0]);
+
+    //       const translatedHTML = generateElementFromString(escaped);
+    //       sanitizeTranslatedHTML(translatedHTML);
+    //       restoreAttributesRecursively(translatedHTML, t.attributes);
+
+    //       const target = targets[i];
+    //       if (target && target.node instanceof Element) {
+    //         target.node.innerHTML = translatedHTML.innerHTML;
+    //       }
+    //     }
+    //     loading.remove();
+    //   });
+    // }
   }
 
   setTimeout(() => translateInViewport(allNodes), 1000);
