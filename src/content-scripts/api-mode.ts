@@ -99,13 +99,15 @@ const translateInViewport = (allNodes: TranslationTarget[]) => {
     //   });
     // }
     const ts = targets.map(({ node }) => {
+      if (node instanceof Element) {
+        node.setAttribute("title", node.textContent || "");
+      }
       const temp = generateElementFromString(getInnerHTMLFlexibly(node));
       sanitizeTranslatedHTML(temp);
       const attributes = getAllAtrributeRecursively(temp);
       removeAllAttributesRecursively(temp);
-      const lineBreaked = temp.innerHTML.replaceAll(/\. /g, "$&\n");
       return {
-        texts: lineBreaked,
+        texts: temp.innerHTML,
         attributes,
       };
     });
